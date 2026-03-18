@@ -1,6 +1,16 @@
-#define PS2_BASE 0xFF200100
-#define HEX3_HEX0_BASE 0xFF200020
-#define HEX5_HEX4_BASE 0xFF200030
+/*
+Mouse input data:
+1. move up: 0x080001
+2. move down: 0x2800FF
+3. move left: 18FF00
+4. move right: 0x080100
+5. left click: 0x090000
+6. right click: 0x0A0000
+7. middle click: 0x0C0000
+8. button release: 0x080000
+*/
+
+#include "address_map.h"
 
 /* function prototypes */
 void HEX_PS2(char, char, char);
@@ -24,7 +34,7 @@ int main(void) {
       /* shift the next data byte into the display */
       byte1 = byte2;
       byte2 = byte3;
-      byte3 = PS2_data & 0xFF;
+      byte3 = (PS2_data & 0xFF);
       HEX_PS2(byte1, byte2, byte3);
       //   if ((byte2 == (char)0xAA) && (byte3 == (char)0x00))
       //     // mouse inserted; initialize sending of data
