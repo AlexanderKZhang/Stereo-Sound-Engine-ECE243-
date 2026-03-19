@@ -1,28 +1,17 @@
-/*
-Mouse input data:
-1. move up: 0x080001
-2. move down: 0x2800FF
-3. move left: 18FF00
-4. move right: 0x080100
-5. left click: 0x090000
-6. right click: 0x0A0000
-7. middle click: 0x0C0000
-8. button release: 0x080000
-*/
+// mouse data
+#define moveUP 0x080001
+#define moveDOWN 0x2800FF
+#define moveLEFT 0x18FF00
+#define moveRIGHT 0x080100
+#define leftClick 0x090000
+#define rightClick 0x0A0000
+#define middleClick 0x0C0000
+#define buttonRelease 0x080000
 
 #include "address_map.h"
+#include "p2s.h"
 
-/* function prototypes */
-void HEX_PS2(char, char, char);
-/*******************************************************************************
- * This program demonstrates use of the PS/2 port by displaying the last three
- * bytes of data received from the PS/2 port on the HEX displays.
- ******************************************************************************/
-int main(void) {
-  /* Declare volatile pointers to I/O registers (volatile means that IO load
-  and store instructions will be used to access these pointer locations,
-  instead of regular memory loads and stores) */
-  volatile int* PS2_ptr = (int*)PS2_BASE;
+void readPS2(volatile int* PS2_ptr) {
   int PS2_data, RVALID;
   char byte1 = 0, byte2 = 0, byte3 = 0;
   // PS/2 mouse needs to be reset (must be already plugged in)

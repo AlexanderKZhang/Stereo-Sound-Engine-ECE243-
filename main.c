@@ -3,34 +3,25 @@
 #include <string.h>
 
 #include "address_map.h"
+#include "p2s.h"
+#include "vga.h"
 
-/* function prototypes */
-void HEX_PS2(char, char, char);
-/*******************************************************************************
- * This program demonstrates use of the PS/2 port by displaying the last three
- * bytes of data received from the PS/2 port on the HEX displays.
- ******************************************************************************/
 int main(void) {
   /* Declare volatile pointers to I/O registers (volatile means that IO load
   and store instructions will be used to access these pointer locations,
   instead of regular memory loads and stores) */
-  volatile int* PS2_ptr = (int*)PS2_BASE;
-  int PS2_data, RVALID;
-  char byte1 = 0, byte2 = 0, byte3 = 0;
-  // PS/2 mouse needs to be reset (must be already plugged in)
-  *(PS2_ptr) = 0xFF;  // reset
-  while (1) {
-    PS2_data = *(PS2_ptr);       // read the Data register in the PS/2 port
-    RVALID = PS2_data & 0x8000;  // extract the RVALID field
-    if (RVALID) {
-      /* shift the next data byte into the display */
-      byte1 = byte2;
-      byte2 = byte3;
-      byte3 = (PS2_data & 0xFF);
-      HEX_PS2(byte1, byte2, byte3);
-      //   if ((byte2 == (char)0xAA) && (byte3 == (char)0x00))
-      //     // mouse inserted; initialize sending of data
-      //     *(PS2_ptr) = 0xF4;
-    }
-  }
+  volatile int* VGA_Base = (int*)PIXEL_BUF_CTRL_BASE;
+
+  struct mouse {
+    volatile int* PS2_ptr;
+    int x;
+    int y;
+  } Mouse;
+
+  Mouse.PS2_ptr = (int*)PS2_BASE;
+  Mouse.x = 160;
+  Mouse.y = 120;
+
+  int* VGABase = vgaSetup(PIXEL_BUF_CTRL_BASE);
+  vgaDriver(VGABase, Mouse.x, Mouse.y);
 }
