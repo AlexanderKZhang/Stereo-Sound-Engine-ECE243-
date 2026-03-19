@@ -16,38 +16,38 @@ void readPS2(struct mouse* Mouse) {
   int PS2_data, RVALID;
   char byte1 = 0, byte2 = 0, byte3 = 0;
   // PS/2 mouse needs to be reset (must be already plugged in)
-  Mouse->PS2_ptr = 0xFF;  // reset
-  while (1) {
-    PS2_data = *Mouse->PS2_ptr;  // read the Data register in the PS/2 port
-    RVALID = PS2_data & 0x8000;  // extract the RVALID field
-    if (RVALID) {
-      /* shift the next data byte into the display */
-      byte1 = byte2;
-      byte2 = byte3;
-      byte3 = (PS2_data & 0xFF);
-      HEX_PS2(byte1, byte2, byte3);
-      if ((byte2 == (char)0xAA) && (byte3 == (char)0x00))
-        // mouse inserted; initialize sending of data
-        *Mouse->PS2_ptr = 0xF4;
+  *Mouse->PS2_ptr = 0xFF;      // reset
+  PS2_data = *Mouse->PS2_ptr;  // read the Data register in the PS/2 port
+  RVALID = PS2_data & 0x8000;  // extract the RVALID field
+  if (RVALID) {
+    /* shift the next data byte into the display */
+    byte1 = byte2;
+    byte2 = byte3;
+    byte3 = (char)(PS2_data & 0xFF);
+    HEX_PS2(byte1, byte2, byte3);
 
-      int ps2Data = (byte1 << 16) | (byte2 << 8) | byte3;
-      switch (ps2Data) {
-        case moveUP:
-          Mouse->y += 1;
-          break;
-        case moveDOWN:
-          Mouse->y -= 1;
-          break;
-        case moveLEFT:
-          Mouse->x -= 1;
-          break;
-        case moveRIGHT:
-          Mouse->x += 1;
-          break;
-        default:
-          break;
-      }
+    // depending on the data that the mouse sent, update the cursor position
+    int ps2Data = (byte1 << 16) | (byte2 << 8) | byte3;
+    switch (ps2Data) {
+      case moveUP:
+        Mouse->y += 1;
+        break;
+      case moveDOWN:
+        Mouse->y -= 1;
+        break;
+      case moveLEFT:
+        Mouse->x -= 1;
+        break;
+      case moveRIGHT:
+        Mouse->x += 1;
+        break;
+      default:
+        break;
     }
+
+    if ((byte2 == (char)0xAA) && (byte3 == (char)0x00))
+      // mouse inserted; initialize sending of data
+      *Mouse->PS2_ptr = 0xF4;
   }
 }
 
@@ -67,7 +67,7 @@ void HEX_PS2(char b1, char b2, char b3) {
   unsigned int shift_buffer, nibble;
   unsigned char code;
   int i;
-  shift_buffer = (b1 << 16) | (b2 << 8) | b3;
+  shift_buffer = (unsigned int)((b1 << 16) | (b2 << 8) | b3);
   for (i = 0; i < 6; ++i) {
     nibble = shift_buffer & 0x0000000F;  // character is in rightmost nibble
     code = seven_seg_decode_table[nibble];

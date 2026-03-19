@@ -6,9 +6,9 @@
 short buffer1[240][512];
 short buffer2[240][512];
 
-int* vgaSetup(int VGABaseAddress) {
+int* vgaSetup(unsigned int VGABaseAddress) {
   // set the address to the buffer base
-  volatile int* vgaBase = (int*)VGABaseAddress;
+  int* vgaBase = (int*)VGABaseAddress;
   volatile int backBufferAddress;
 
   // set buffer1 to be front buffer
@@ -28,7 +28,7 @@ int* vgaSetup(int VGABaseAddress) {
 
 void vgaDriver(volatile int* VGABase, int mouseX, int mouseY) {
   volatile int backBufferAddress = VGABase[1];
-  drawBox3(backBufferAddress, mouseX, mouseY, WHITE);
+  drawBall(backBufferAddress, mouseX, mouseY, (short)WHITE);
   waitForSync(VGABase);
   backBufferAddress = VGABase[1];
 }
@@ -56,7 +56,7 @@ void drawPixel(volatile int backBufferAddress, int x, int y, short colour) {
 void clearScreen(volatile int backBufferAddress) {
   for (int x = 0; x < 320; x++) {
     for (int y = 0; y < 240; y++) {
-      drawPixel(backBufferAddress, x, y, BLACK);
+      drawPixel(backBufferAddress, x, y, (short)BLACK);
     }
   }
 }

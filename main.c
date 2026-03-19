@@ -3,9 +3,9 @@
 #include <string.h>
 
 #include "address_map.h"
-#include "ps2.c"
+// #include "ps2.c"
 #include "ps2.h"
-#include "vga.c"
+// #include "vga.c"
 #include "vga.h"
 
 int main(void) {
@@ -19,7 +19,7 @@ int main(void) {
   Mouse.x = 160;
   Mouse.y = 120;
 
-  volatile int* VGABase = vgaSetup(PIXEL_BUF_CTRL_BASE);
+  volatile int* VGABase = vgaSetup((unsigned int)PIXEL_BUF_CTRL_BASE);
 
   while (1) {
     vgaDriver(VGABase, Mouse.x, Mouse.y);

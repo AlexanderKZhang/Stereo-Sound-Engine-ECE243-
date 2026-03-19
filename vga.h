@@ -4,7 +4,7 @@
 #define WHITE 0xFFFF
 #define BLACK 0x0000
 
-int* vgaSetup(int VGABaseAddress);
+int* vgaSetup(unsigned int VGABaseAddress);
 void vgaDriver(volatile int* VGABase, int mouseX, int mouseY);
 void waitForSync(volatile int* VGABase);
 void drawPixel(volatile int backBufferAddress, int x, int y, short colour);
