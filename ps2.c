@@ -12,12 +12,15 @@
 
 #include "address_map.h"
 
+void ps2Setup(struct mouse* Mouse) {
+  // PS/2 mouse needs to be reset (must be already plugged in)
+  *Mouse->PS2_ptr = 0xFF;  // reset
+}
+
 void readPS2(struct mouse* Mouse) {
   int PS2_data, RVALID;
-  char byte1 = 0, byte2 = 0, byte3 = 0;
-  // PS/2 mouse needs to be reset (must be already plugged in)
-  *Mouse->PS2_ptr = 0xFF;      // reset
   PS2_data = *Mouse->PS2_ptr;  // read the Data register in the PS/2 port
+  char byte1 = 0, byte2 = 0, byte3 = 0;
   RVALID = PS2_data & 0x8000;  // extract the RVALID field
   if (RVALID) {
     /* shift the next data byte into the display */

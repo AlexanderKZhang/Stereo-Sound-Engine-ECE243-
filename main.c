@@ -20,6 +20,7 @@ int main(void) {
   Mouse.y = 120;
 
   volatile int* VGABase = vgaSetup((unsigned int)PIXEL_BUF_CTRL_BASE);
+  ps2Setup(&Mouse);
 
   while (1) {
     vgaDriver(VGABase, Mouse.x, Mouse.y);

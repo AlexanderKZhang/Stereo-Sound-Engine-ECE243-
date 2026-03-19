@@ -7,6 +7,7 @@ struct mouse {
   int y;
 };
 
+void ps2Setup(struct mouse* Mouse);
 void readPS2(struct mouse* Mouse);
 void HEX_PS2(char b1, char b2, char b3);
 
