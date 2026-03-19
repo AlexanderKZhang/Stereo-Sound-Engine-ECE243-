@@ -1,13 +1,14 @@
-// padding added to buffers in the x direction
-short buffer1[240][512];
-short buffer2[240][512];
+#ifndef VGA_H
+#define VGA_H
 
 #define WHITE 0xFFFF
 #define BLACK 0x0000
 
-int* vgaSetup(int* VGABaseAddress);
+int* vgaSetup(int VGABaseAddress);
 void vgaDriver(volatile int* VGABase, int mouseX, int mouseY);
 void waitForSync(volatile int* VGABase);
 void drawPixel(volatile int backBufferAddress, int x, int y, short colour);
 void clearScreen(volatile int backBufferAddress);
-void drawBox3(volatile int backBufferAddress, int x, int y, short colour);
+void drawBall(volatile int backBufferAddress, int x, int y, short colour);
+
+#endif

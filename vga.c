@@ -2,18 +2,24 @@
 
 #include "address_map.h"
 
-int* vgaSetup(int* VGABaseAddress) {
+// padding added to buffers in the x direction
+short buffer1[240][512];
+short buffer2[240][512];
+
+int* vgaSetup(int VGABaseAddress) {
   // set the address to the buffer base
-  int* vgaBase = VGABaseAddress;
-  volatile int backBufferAddress = vgaBase + 1;
+  volatile int* vgaBase = (int*)VGABaseAddress;
+  volatile int backBufferAddress;
 
   // set buffer1 to be front buffer
-  backBufferAddress = buffer1;
+  vgaBase[1] = (int)&buffer1;
+  backBufferAddress = vgaBase[1];
   clearScreen(backBufferAddress);
   waitForSync(vgaBase);
 
   // set buffer2 to be back buffer
-  backBufferAddress = buffer2;
+  vgaBase[1] = (int)&buffer2;
+  backBufferAddress = vgaBase[1];
   clearScreen(backBufferAddress);
   waitForSync(vgaBase);
 
@@ -21,12 +27,10 @@ int* vgaSetup(int* VGABaseAddress) {
 }
 
 void vgaDriver(volatile int* VGABase, int mouseX, int mouseY) {
-  while (1) {
-    volatile int backBufferAddress = VGABase[1];
-    drawBox3(backBufferAddress, mouseX, mouseY, WHITE);
-    waitForSync(VGABase);
-    backBufferAddress = VGABase[1];
-  }
+  volatile int backBufferAddress = VGABase[1];
+  drawBox3(backBufferAddress, mouseX, mouseY, WHITE);
+  waitForSync(VGABase);
+  backBufferAddress = VGABase[1];
 }
 
 // initiate buffer swap process and wait for the buffer to finish
@@ -57,7 +61,7 @@ void clearScreen(volatile int backBufferAddress) {
   }
 }
 
-void drawBox3(volatile int backBufferAddress, int x, int y, short colour) {
+void drawBall(volatile int backBufferAddress, int x, int y, short colour) {
   for (int i = x - 1; i < x + 2; i++) {
     for (int j = y - 1; j < y + 2; j++) {
       if (i >= 0 && i < 320 && j >= 0 && j < 240) {
