@@ -43,19 +43,23 @@ void ps2Setup() {
   int PS2Data;
 
   // wait for the PS2 to finish internal setup before proceeding
+  // Wait for 0xAA
   while (1) {
-    // get the PS2 data reg contents
     PS2Data = *Mouse.PS2_ptr;
-
     // read data when it is available
     // data is available when RVALID (bit 15 of PS2Data) is a 1
     if (PS2Data & (1 << 15)) {
-      char data = (char)(PS2Data & 0xFF);
+      if ((char)(PS2Data & 0xFF) == (char)0xAA) break;
+    }
+  }
 
-      if (data == (char)0xAA) {  // once the AA 0xAA byte is read, that means
-                                 // that the mouse is now interally setup
-        break;
-      }
+  // Wait for 0x00 (Mouse ID) which always follows 0xAA
+  while (1) {
+    PS2Data = *Mouse.PS2_ptr;
+    // read data when it is available
+    // data is available when RVALID (bit 15 of PS2Data) is a 1
+    if (PS2Data & (1 << 15)) {
+      if ((char)(PS2Data & 0xFF) == (char)0x00) break;
     }
   }
 
@@ -73,13 +77,16 @@ void readPS2() {
   static int byteCounter = 0;
   RVALID = PS2_data & 0x8000;  // extract the RVALID field
   if (RVALID) {
-    if (byteCounter < 3) {
-      /* shift the next data byte into the display */
-      byteCounter++;
-      bytes[0] = bytes[1];
-      bytes[1] = bytes[2];
-      bytes[2] = (char)(PS2_data & 0xFF);
-    }
+    unsigned char newData = (char)(PS2_data & 0xFF);
+
+    // check for byte misalignment and skip the byte if misaligned
+    if (byteCounter == 0 && !(newData & (1 << 3))) return;
+
+    /* shift the next data byte into the display */
+    bytes[0] = bytes[1];
+    bytes[1] = bytes[2];
+    bytes[2] = newData;
+    byteCounter++;
 
     if (byteCounter >= 3) {
       byteCounter = 0;

@@ -9,28 +9,18 @@ short buffer2[240][512];
 int* vgaSetup(unsigned int VGABaseAddress) {
   // set the address to the buffer base
   int* vgaBase = (int*)VGABaseAddress;
-  volatile int backBufferAddress;
 
   // set buffer1 to be front buffer
   vgaBase[1] = (int)&buffer1;
-  backBufferAddress = vgaBase[1];
-  clearScreen(backBufferAddress);
+  clearScreen(buffer1);
   waitForSync(vgaBase);
 
   // set buffer2 to be back buffer
   vgaBase[1] = (int)&buffer2;
-  backBufferAddress = vgaBase[1];
-  clearScreen(backBufferAddress);
+  clearScreen(buffer2);
   waitForSync(vgaBase);
 
   return vgaBase;
-}
-
-void vgaDriver(volatile int* VGABase, int mouseX, int mouseY) {
-  volatile int backBufferAddress = VGABase[1];
-  drawBall(backBufferAddress, mouseX, mouseY, (short)WHITE);
-  waitForSync(VGABase);
-  backBufferAddress = VGABase[1];
 }
 
 // initiate buffer swap process and wait for the buffer to finish
@@ -62,10 +52,18 @@ void clearScreen(volatile int backBufferAddress) {
 }
 
 void drawBall(volatile int backBufferAddress, int x, int y, short colour) {
-  for (int i = x - 1; i < x + 2; i++) {
-    for (int j = y - 1; j < y + 2; j++) {
-      if (i >= 0 && i < 320 && j >= 0 && j < 240) {
-        drawPixel(backBufferAddress, i, j, colour);
+  for (int i = x - 2; i < x + 3; i++) {
+    if (i == x - 2 || i == x + 2) {
+      for (int j = y - 1; j < y + 2; j++) {
+        if (i >= 0 && i < 320 && j >= 0 && j < 240) {
+          drawPixel(backBufferAddress, i, j, colour);
+        }
+      }
+    } else {
+      for (int j = y - 2; j < y + 3; j++) {
+        if (i >= 0 && i < 320 && j >= 0 && j < 240) {
+          drawPixel(backBufferAddress, i, j, colour);
+        }
       }
     }
   }

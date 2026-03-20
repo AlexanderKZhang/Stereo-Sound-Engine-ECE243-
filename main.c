@@ -9,7 +9,7 @@
 #include "vga.h"
 
 void interruptSetup();
-void interruptHandler();
+void interruptHandler() __attribute__((interrupt("machine")));
 
 struct mouse Mouse;
 
@@ -26,7 +26,9 @@ int main(void) {
   interruptSetup();
 
   while (1) {
-    vgaDriver(VGABase, Mouse.x, Mouse.y);
+    volatile int backBufferAddress = VGABase[1];
+    drawBall(backBufferAddress, Mouse.x, Mouse.y, (short)WHITE);
+    waitForSync(VGABase);
   }
 }
 
