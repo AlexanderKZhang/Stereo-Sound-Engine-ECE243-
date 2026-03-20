@@ -1,6 +1,9 @@
 #include "vga.h"
 
 #include "address_map.h"
+#include "ps2.h"
+
+extern struct mouse Mouse;
 
 // padding added to buffers in the x direction
 short buffer1[240][512];
@@ -12,13 +15,15 @@ int* vgaSetup(unsigned int VGABaseAddress) {
 
   // set buffer1 to be front buffer
   vgaBase[1] = (int)&buffer1;
-  clearScreen(buffer1);
+  clearScreen((int)buffer1);
   waitForSync(vgaBase);
 
   // set buffer2 to be back buffer
   vgaBase[1] = (int)&buffer2;
-  clearScreen(buffer2);
+  clearScreen((int)buffer2);
   waitForSync(vgaBase);
+  Mouse.prevX = Mouse.x;
+  Mouse.prevY = Mouse.y;
 
   return vgaBase;
 }

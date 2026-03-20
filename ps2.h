@@ -3,8 +3,10 @@
 
 struct mouse {
   volatile int* PS2_ptr;
-  int x[3];
-  int y[3];
+  int x;
+  int y;
+  int prevX;
+  int prevY;
 };
 
 void ps2Setup();

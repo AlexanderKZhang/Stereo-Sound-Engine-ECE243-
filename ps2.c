@@ -97,23 +97,20 @@ void readPS2() {
       int yData = (bytes[0] & (1 << 5)) ? (0xFFFFFF00 | bytes[2]) : bytes[2];
 
       if (xData) {
-        Mouse.x[0] = Mouse.x[1];
-        Mouse.x[1] = Mouse.x[2];
-        Mouse.x[2] += xData;
+        Mouse.x += xData;
         if (Mouse.x < 0)
-          Mouse.x[2] = 0;
+          Mouse.x = 0;
         else if (Mouse.x >= 320)
-          Mouse.x[2] = 319;
+          Mouse.x = 319;
       }
 
       if (yData) {
-        Mouse.y[0] = Mouse.y[1];
-        Mouse.y[1] = Mouse.y[2];
-        Mouse.y[2] -= yData;
-        if (Mouse.y[2] < 0)
-          Mouse.y[2] = 0;
-        else if (Mouse.y[2] >= 240)
-          Mouse.y[2] = 239;
+        Mouse.y = Mouse.y;
+        Mouse.y -= yData;
+        if (Mouse.y < 0)
+          Mouse.y = 0;
+        else if (Mouse.y >= 240)
+          Mouse.y = 239;
       }
     }
   }
