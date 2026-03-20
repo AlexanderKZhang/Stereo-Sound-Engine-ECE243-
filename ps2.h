@@ -10,5 +10,6 @@ struct mouse {
 void ps2Setup();
 void readPS2();
 void HEX_PS2(char b1, char b2, char b3);
+void waitForByte(char byte);
 
 #endif

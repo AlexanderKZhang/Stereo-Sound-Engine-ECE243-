@@ -40,28 +40,13 @@ void ps2Setup() {
   // PS/2 mouse needs to be reset (must be already plugged in)
   *Mouse.PS2_ptr = 0xFF;  // reset
 
-  int PS2Data;
-
   // wait for the PS2 to finish internal setup before proceeding
-  // Wait for 0xAA
-  while (1) {
-    PS2Data = *Mouse.PS2_ptr;
-    // read data when it is available
-    // data is available when RVALID (bit 15 of PS2Data) is a 1
-    if (PS2Data & (1 << 15)) {
-      if ((char)(PS2Data & 0xFF) == (char)0xAA) break;
-    }
-  }
-
-  // Wait for 0x00 (Mouse ID) which always follows 0xAA
-  while (1) {
-    PS2Data = *Mouse.PS2_ptr;
-    // read data when it is available
-    // data is available when RVALID (bit 15 of PS2Data) is a 1
-    if (PS2Data & (1 << 15)) {
-      if ((char)(PS2Data & 0xFF) == (char)0x00) break;
-    }
-  }
+  // wait for 0xFA
+  waitForByte(0xFA);
+  // Wait for 0xAA which always follows 0xFA
+  waitForByte(0xAA);
+  // Wait for 0x00 which always follows 0xAA
+  waitForByte(0x00);
 
   // mouse inserted; initialize sending of data
   *Mouse.PS2_ptr = 0xF4;
@@ -141,4 +126,16 @@ void HEX_PS2(char b1, char b2, char b3) {
   /* drive the hex displays */
   *(HEX3_HEX0_ptr) = *(int*)(hex_segs);
   *(HEX5_HEX4_ptr) = *(int*)(hex_segs + 4);
+}
+
+void waitForByte(char byte) {
+  int PS2Data;
+  while (1) {
+    PS2Data = *Mouse.PS2_ptr;
+    // read data when it is available
+    // data is available when RVALID (bit 15 of PS2Data) is a 1
+    if (PS2Data & (1 << 15)) {
+      if ((char)(PS2Data & 0xFF) == byte) break;
+    }
+  }
 }

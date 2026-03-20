@@ -13,9 +13,6 @@ void interruptHandler() __attribute__((interrupt("machine")));
 
 struct mouse Mouse;
 
-extern short buffer1[240][512];
-extern short buffer2[240][512];
-
 int main(void) {
   /* Declare volatile pointers to I/O registers (volatile means that IO load
   and store instructions will be used to access these pointer locations,
@@ -28,19 +25,23 @@ int main(void) {
   volatile int* VGABase = vgaSetup((unsigned int)PIXEL_BUF_CTRL_BASE);
   interruptSetup();
 
+  bool drawingBuffer1 = true;
   while (1) {
+    int tempX = Mouse.x;
+    int tempY = Mouse.y;
     volatile int backBufferAddress = VGABase[1];
-    if (backBufferAddress == (int)buffer1) {
-      drawBall(backBufferAddress, Mouse.buffer1X, Mouse.buffer1Y, (short)BLACK);
-      Mouse.buffer1X = Mouse.x;
-      Mouse.buffer1Y = Mouse.y;
-    } else {
+    if (drawingBuffer1) {
       drawBall(backBufferAddress, Mouse.buffer2X, Mouse.buffer2Y, (short)BLACK);
-      Mouse.buffer2X = Mouse.x;
-      Mouse.buffer2Y = Mouse.y;
+      Mouse.buffer2X = tempX;
+      Mouse.buffer2Y = tempY;
+    } else {
+      drawBall(backBufferAddress, Mouse.buffer1X, Mouse.buffer1Y, (short)BLACK);
+      Mouse.buffer1X = tempX;
+      Mouse.buffer1Y = tempY;
     }
-    drawBall(backBufferAddress, Mouse.x, Mouse.y, (short)WHITE);
+    drawBall(backBufferAddress, tempX, tempY, (short)WHITE);
     waitForSync(VGABase);
+    drawingBuffer1 = !drawingBuffer1;
   }
 }
 

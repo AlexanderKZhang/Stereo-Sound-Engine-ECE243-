@@ -3,21 +3,21 @@
 #include "address_map.h"
 
 // padding added to buffers in the x direction
-short buffer1[240][512];
-short buffer2[240][512];
+#define buffer1 0x08000000
+#define buffer2 0x08040000
 
 int* vgaSetup(unsigned int VGABaseAddress) {
   // set the address to the buffer base
   int* vgaBase = (int*)VGABaseAddress;
 
   // set buffer1 to be front buffer
-  vgaBase[1] = (int)&buffer1;
-  clearScreen((int)buffer1);
+  vgaBase[1] = buffer1;
+  clearScreen(buffer1);
   waitForSync(vgaBase);
 
   // set buffer2 to be back buffer
-  vgaBase[1] = (int)&buffer2;
-  clearScreen((int)buffer2);
+  vgaBase[1] = buffer2;
+  clearScreen(buffer2);
   waitForSync(vgaBase);
 
   return vgaBase;
