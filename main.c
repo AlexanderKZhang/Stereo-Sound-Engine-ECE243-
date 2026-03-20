@@ -19,15 +19,20 @@ int main(void) {
   instead of regular memory loads and stores) */
 
   Mouse.PS2_ptr = (int*)PS2_BASE;
-  Mouse.x = 160;
-  Mouse.y = 120;
+  Mouse.x[0] = 160;
+  Mouse.x[1] = 160;
+  Mouse.x[2] = 160;
+  Mouse.y[0] = 120;
+  Mouse.y[1] = 120;
+  Mouse.y[2] = 120;
 
   volatile int* VGABase = vgaSetup((unsigned int)PIXEL_BUF_CTRL_BASE);
   interruptSetup();
 
   while (1) {
     volatile int backBufferAddress = VGABase[1];
-    drawBall(backBufferAddress, Mouse.x, Mouse.y, (short)WHITE);
+    drawBall(backBufferAddress, Mouse.x[0], Mouse.y[0], (short)BLACK);
+    drawBall(backBufferAddress, Mouse.x[2], Mouse.y[2], (short)WHITE);
     waitForSync(VGABase);
   }
 }
