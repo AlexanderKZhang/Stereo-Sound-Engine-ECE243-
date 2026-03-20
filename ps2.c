@@ -1,56 +1,110 @@
-// mouse data
-#define moveUP 0x080001
-#define moveDOWN 0x2800FF
-#define moveLEFT 0x18FF00
-#define moveRIGHT 0x080100
-#define leftClick 0x090000
-#define rightClick 0x0A0000
-#define middleClick 0x0C0000
-#define buttonRelease 0x080000
+/*
+Byte 1: The Status Byte
+This is the most important byte. It acts as a dashboard for the mouse's current
+state and tells you how to read the next two bytes.
+
+Bit 0 (Rightmost): Left Button (1 = pressed, 0 = released)
+
+Bit 1: Right Button
+
+Bit 2: Middle Button
+
+Bit 3: Always 1
+
+Bit 4: X-Axis Sign Bit (1 = moving left/negative, 0 = moving right/positive)
+
+Bit 5: Y-Axis Sign Bit (1 = moving down/negative, 0 = moving up/positive)
+
+Bit 6: X-Axis Overflow (moved too fast for the 8-bit counter)
+
+Bit 7 (Leftmost): Y-Axis Overflow
+
+Byte 2: X-Axis Movement
+This is an 8-bit number representing how far the mouse moved horizontally.
+
+Because it is 8 bits, the raw values range from 0 to 255 (0x00 to 0xFF).
+
+However, this is actually a Two's Complement signed integer (-128 to +127).
+
+Byte 3: Y-Axis Movement
+Exactly like Byte 2, but for the vertical axis.
+*/
 
 #include "ps2.h"
 
 #include "address_map.h"
 
-void ps2Setup(struct mouse* Mouse) {
+extern struct mouse Mouse;
+
+void ps2Setup() {
   // PS/2 mouse needs to be reset (must be already plugged in)
-  *Mouse->PS2_ptr = 0xFF;  // reset
+  *Mouse.PS2_ptr = 0xFF;  // reset
+
+  int PS2Data;
+
+  // wait for the PS2 to finish internal setup before proceeding
+  while (1) {
+    // get the PS2 data reg contents
+    PS2Data = *Mouse.PS2_ptr;
+
+    // read data when it is available
+    // data is available when RVALID (bit 15 of PS2Data) is a 1
+    if (PS2Data & (1 << 15)) {
+      char data = (char)(PS2Data & 0xFF);
+
+      if (data == (char)0xAA) {  // once the AA 0xAA byte is read, that means
+                                 // that the mouse is now interally setup
+        break;
+      }
+    }
+  }
+
+  // mouse inserted; initialize sending of data
+  *Mouse.PS2_ptr = 0xF4;
+
+  // setup interrupts for the PS2 port
+  Mouse.PS2_ptr[1] = Mouse.PS2_ptr[1] | 0b1;
 }
 
-void readPS2(struct mouse* Mouse) {
-  int PS2_data, RVALID;
-  PS2_data = *Mouse->PS2_ptr;  // read the Data register in the PS/2 port
-  char byte1 = 0, byte2 = 0, byte3 = 0;
+void readPS2() {
+  static int PS2_data, RVALID;
+  PS2_data = *Mouse.PS2_ptr;  // read the Data register in the PS/2 port
+  static unsigned char bytes[3] = {0, 0, 0};
+  static int byteCounter = 0;
   RVALID = PS2_data & 0x8000;  // extract the RVALID field
   if (RVALID) {
-    /* shift the next data byte into the display */
-    byte1 = byte2;
-    byte2 = byte3;
-    byte3 = (char)(PS2_data & 0xFF);
-    HEX_PS2(byte1, byte2, byte3);
-
-    // depending on the data that the mouse sent, update the cursor position
-    int ps2Data = (byte1 << 16) | (byte2 << 8) | byte3;
-    switch (ps2Data) {
-      case moveUP:
-        Mouse->y += 1;
-        break;
-      case moveDOWN:
-        Mouse->y -= 1;
-        break;
-      case moveLEFT:
-        Mouse->x -= 1;
-        break;
-      case moveRIGHT:
-        Mouse->x += 1;
-        break;
-      default:
-        break;
+    if (byteCounter < 3) {
+      /* shift the next data byte into the display */
+      byteCounter++;
+      bytes[0] = bytes[1];
+      bytes[1] = bytes[2];
+      bytes[2] = (char)(PS2_data & 0xFF);
     }
 
-    if ((byte2 == (char)0xAA) && (byte3 == (char)0x00))
-      // mouse inserted; initialize sending of data
-      *Mouse->PS2_ptr = 0xF4;
+    if (byteCounter >= 3) {
+      byteCounter = 0;
+      HEX_PS2(bytes[0], bytes[1], bytes[2]);
+
+      // decipher the PS2 data bytes
+      int xData = (bytes[0] & (1 << 4)) ? (0xFFFFFF00 | bytes[1]) : bytes[1];
+      int yData = (bytes[0] & (1 << 5)) ? (0xFFFFFF00 | bytes[2]) : bytes[2];
+
+      if (xData) {
+        Mouse.x += xData;
+        if (Mouse.x < 0)
+          Mouse.x = 0;
+        else if (Mouse.x >= 320)
+          Mouse.x = 319;
+      }
+
+      if (yData) {
+        Mouse.y -= yData;
+        if (Mouse.y < 0)
+          Mouse.y = 0;
+        else if (Mouse.y >= 240)
+          Mouse.y = 239;
+      }
+    }
   }
 }
 
