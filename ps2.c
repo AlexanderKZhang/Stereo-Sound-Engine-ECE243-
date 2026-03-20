@@ -105,7 +105,6 @@ void readPS2() {
       }
 
       if (yData) {
-        Mouse.y = Mouse.y;
         Mouse.y -= yData;
         if (Mouse.y < 0)
           Mouse.y = 0;
