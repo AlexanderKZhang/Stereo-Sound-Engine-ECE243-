@@ -1,52 +1,55 @@
-#include "diff_style-electric-storm-mono-sound.h"
+#include "audio_array.h"
+
 
 #define AUDIO_BASE 0xFF203040
 #define SCALE_FACTOR 1.5
-#define AUDIO_ARRAY_SIZE 3048594
 
-// Tell the compiler your array is made of signed 8-bit values
-typedef signed char byte;
+// If array has 687,168 bytes, it has 171,792 32-bit words
+#define AUDIO_WORD_COUNT (687168 / 4) 
 
 int main(void) {
-  // Corrected Audio port structure for 32-bit hardware access
   struct audio_t {
-    volatile unsigned int control;
-    volatile char RARC;
-    volatile char RALC;
-    volatile char WSRC;
-    volatile char WSLC;  // Corrected from WDLC to WSLC
-    volatile unsigned int left_fifo;
-    volatile unsigned int right_fifo;
+    volatile unsigned int control;     
+    volatile unsigned int fifospace;   
+    volatile unsigned int left_fifo;   
+    volatile unsigned int right_fifo;  
   };
 
   struct audio_t* const audiop = ((struct audio_t*)AUDIO_BASE);
 
-  int sound_index_counter = 0;
+  int word_index_counter = 0;
   int left, right;
 
+  // THE MAGIC TRICK: 
+  // Cast your 8-bit byte array into a 32-bit integer array.
+  // (Replace 'bombinsound...' with your exact array name)
+  const int* audio_word_array = (const int*) bombinsound_the_motherx27s_day_21_second;
+
   while (1) {
-    // Ensure space is available to write to BOTH outgoing FIFOs.
-    if ((audiop->WSRC > 0) && (audiop->WSLC > 0)) {
-      // Get the 8-bit signed sound from the audio array
-      byte raw_sample = diff_style_electric_storm_mono[sound_index_counter];
+    unsigned int space = audiop->fifospace;
+    
+    int wsrc = (space & 0x00FF0000) >> 16; 
+    int wslc = (space & 0xFF000000) >> 24; 
 
-      // Shift the 8-bit signed value up by 24 bits to fill the 32-bit range
-      int scaled_sample = ((int)raw_sample) << 24;
+    if ((wsrc > 0) && (wslc > 0)) {
+      
+      // Read the fully assembled 32-bit word directly from the casted array!
+      int raw_sample_word = audio_word_array[word_index_counter];
 
-      // Apply your SCALE_FACTOR and assign to the left channel
-      left = (int)(scaled_sample * SCALE_FACTOR);
-
-      // Since it is mono, copy the exact same signal to the right channel
+      // Apply the volume scale factor
+      left = (int)(raw_sample_word * SCALE_FACTOR);
       right = left;
 
-      // Write the newly mixed audio to the output FIFOs
+      // Write to the hardware FIFOs
       audiop->left_fifo = left;
       audiop->right_fifo = right;
 
-      // Advance the circular buffer pointer and wrap around
-      sound_index_counter++;
-      if (sound_index_counter >= AUDIO_ARRAY_SIZE) {
-        sound_index_counter = 0;
+      // Advance the index. (Change to += 11 if you still need to speed it up)
+      word_index_counter++; 
+
+      // Wrap around using the WORD count, not the BYTE size
+      if (word_index_counter >= AUDIO_WORD_COUNT) {
+        word_index_counter = 0;
       }
     }
   }
