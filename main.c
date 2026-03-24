@@ -31,11 +31,11 @@ int main(void) {
     int tempY = Mouse.y;
     volatile int backBufferAddress = VGABase[1];
     if (drawingBuffer1) {
-      drawBall(backBufferAddress, Mouse.buffer2X, Mouse.buffer2Y, (short)BLACK);
+      undrawBall(backBufferAddress, Mouse.buffer2X, Mouse.buffer2Y);
       Mouse.buffer2X = tempX;
       Mouse.buffer2Y = tempY;
     } else {
-      drawBall(backBufferAddress, Mouse.buffer1X, Mouse.buffer1Y, (short)BLACK);
+      undrawBall(backBufferAddress, Mouse.buffer1X, Mouse.buffer1Y);
       Mouse.buffer1X = tempX;
       Mouse.buffer1Y = tempY;
     }

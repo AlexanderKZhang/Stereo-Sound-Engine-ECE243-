@@ -11,6 +11,9 @@ int* vgaSetup(unsigned int VGABaseAddress) {
   // set the address to the buffer base
   int* vgaBase = (int*)VGABaseAddress;
 
+  unsigned int resolution = (GREYCIRCLE_HEIGHT << 16) + GREYCIRCLE_WIDTH;
+  vgaBase[2] = resolution;
+
   // set buffer1 to be front buffer
   vgaBase[1] = buffer1;
   clearScreen(buffer1);
@@ -45,9 +48,9 @@ void drawPixel(volatile int backBufferAddress, int x, int y, short colour) {
 
 // clear the back buffer by drawing black into each pixel
 void clearScreen(volatile int backBufferAddress) {
-  for (int x = 0; x < SCREENWIDTH; x++) {
-    for (int y = 0; y < SCREENLENGTH; y++) {
-      drawPixel(backBufferAddress, x, y, greyCircle[SCREENWIDTH * y + x]);
+  for (int x = 0; x < GREYCIRCLE_WIDTH; x++) {
+    for (int y = 0; y < GREYCIRCLE_HEIGHT; y++) {
+      drawPixel(backBufferAddress, x, y, greyCircle[GREYCIRCLE_WIDTH * y + x]);
     }
   }
 }
@@ -56,13 +59,13 @@ void drawBall(volatile int backBufferAddress, int x, int y, short colour) {
   for (int i = x - 2; i < x + 3; i++) {
     if (i == x - 2 || i == x + 2) {
       for (int j = y - 1; j < y + 2; j++) {
-        if (i >= 0 && i < SCREENWIDTH && j >= 0 && j < SCREENLENGTH) {
+        if (i >= 0 && i < GREYCIRCLE_WIDTH && j >= 0 && j < GREYCIRCLE_HEIGHT) {
           drawPixel(backBufferAddress, i, j, colour);
         }
       }
     } else {
       for (int j = y - 2; j < y + 3; j++) {
-        if (i >= 0 && i < SCREENWIDTH && j >= 0 && j < SCREENLENGTH) {
+        if (i >= 0 && i < GREYCIRCLE_WIDTH && j >= 0 && j < GREYCIRCLE_HEIGHT) {
           drawPixel(backBufferAddress, i, j, colour);
         }
       }
@@ -74,14 +77,16 @@ void undrawBall(volatile int backBufferAddress, int x, int y) {
   for (int i = x - 2; i < x + 3; i++) {
     if (i == x - 2 || i == x + 2) {
       for (int j = y - 1; j < y + 2; j++) {
-        if (i >= 0 && i < SCREENWIDTH && j >= 0 && j < SCREENLENGTH) {
-          drawPixel(backBufferAddress, i, j, greyCircle[SCREENLENGTH * y + x]);
+        if (i >= 0 && i < GREYCIRCLE_WIDTH && j >= 0 && j < GREYCIRCLE_HEIGHT) {
+          drawPixel(backBufferAddress, i, j,
+                    greyCircle[GREYCIRCLE_WIDTH * j + i]);
         }
       }
     } else {
       for (int j = y - 2; j < y + 3; j++) {
-        if (i >= 0 && i < SCREENWIDTH && j >= 0 && j < SCREENLENGTH) {
-          drawPixel(backBufferAddress, i, j, greyCircle[SCREENLENGTH * y + x]);
+        if (i >= 0 && i < GREYCIRCLE_WIDTH && j >= 0 && j < GREYCIRCLE_HEIGHT) {
+          drawPixel(backBufferAddress, i, j,
+                    greyCircle[GREYCIRCLE_WIDTH * j + i]);
         }
       }
     }

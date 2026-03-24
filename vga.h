@@ -3,8 +3,6 @@
 
 #define WHITE 0xFFFF
 #define BLACK 0x0000
-#define SCREENWIDTH 320
-#define SCREENLENGTH 240
 
 int* vgaSetup(unsigned int VGABaseAddress);
 void waitForSync(volatile int* VGABase);
