@@ -1,6 +1,7 @@
 #include "vga.h"
 
 #include "address_map.h"
+#include "greyCircle.h"
 
 // padding added to buffers in the x direction
 #define buffer1 0x08000000
@@ -44,9 +45,9 @@ void drawPixel(volatile int backBufferAddress, int x, int y, short colour) {
 
 // clear the back buffer by drawing black into each pixel
 void clearScreen(volatile int backBufferAddress) {
-  for (int x = 0; x < 320; x++) {
-    for (int y = 0; y < 240; y++) {
-      drawPixel(backBufferAddress, x, y, (short)BLACK);
+  for (int x = 0; x < SCREENWIDTH; x++) {
+    for (int y = 0; y < SCREENLENGTH; y++) {
+      drawPixel(backBufferAddress, x, y, greyCircle[SCREENWIDTH * y + x]);
     }
   }
 }
@@ -55,14 +56,32 @@ void drawBall(volatile int backBufferAddress, int x, int y, short colour) {
   for (int i = x - 2; i < x + 3; i++) {
     if (i == x - 2 || i == x + 2) {
       for (int j = y - 1; j < y + 2; j++) {
-        if (i >= 0 && i < 320 && j >= 0 && j < 240) {
+        if (i >= 0 && i < SCREENWIDTH && j >= 0 && j < SCREENLENGTH) {
           drawPixel(backBufferAddress, i, j, colour);
         }
       }
     } else {
       for (int j = y - 2; j < y + 3; j++) {
-        if (i >= 0 && i < 320 && j >= 0 && j < 240) {
+        if (i >= 0 && i < SCREENWIDTH && j >= 0 && j < SCREENLENGTH) {
           drawPixel(backBufferAddress, i, j, colour);
+        }
+      }
+    }
+  }
+}
+
+void undrawBall(volatile int backBufferAddress, int x, int y) {
+  for (int i = x - 2; i < x + 3; i++) {
+    if (i == x - 2 || i == x + 2) {
+      for (int j = y - 1; j < y + 2; j++) {
+        if (i >= 0 && i < SCREENWIDTH && j >= 0 && j < SCREENLENGTH) {
+          drawPixel(backBufferAddress, i, j, greyCircle[SCREENLENGTH * y + x]);
+        }
+      }
+    } else {
+      for (int j = y - 2; j < y + 3; j++) {
+        if (i >= 0 && i < SCREENWIDTH && j >= 0 && j < SCREENLENGTH) {
+          drawPixel(backBufferAddress, i, j, greyCircle[SCREENLENGTH * y + x]);
         }
       }
     }

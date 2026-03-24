@@ -1,8 +1,8 @@
 INSTALL	:= C:/intelFPGA/QUARTUS_Lite_V23.1
 
 MAIN	:= main.c
-HDRS	:= address_map.h
-SRCS	:= $(MAIN)
+HDRS	:= address_map.h ps2.h vga.h greyCircle.h
+SRCS	:= $(MAIN) ps2.c vga.c
 
 SHELL	:= cmd.exe
 

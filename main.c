@@ -1,11 +1,11 @@
+#include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "address_map.h"
-// #include "ps2.c"
+#include "greyCircle.h"
 #include "ps2.h"
-// #include "vga.c"
 #include "vga.h"
 
 void interruptSetup();
