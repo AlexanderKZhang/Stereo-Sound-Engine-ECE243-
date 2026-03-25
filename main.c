@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "address_map.h"
+#include "audio.c"
 #include "greyCircle.h"
 #include "ps2.h"
 #include "vga.h"
@@ -58,6 +59,10 @@ void interruptSetup() {
   mieValue = (0b1 << 22);
   __asm__ volatile("csrs mie, %0" ::"r"(mieValue));
 
+  // enable interrupts for Audio port (IRQ21)
+  mieValue = (0b1 << 21);
+  __asm__ volatile("csrs mie, %0" ::"r"(mieValue));
+
   // store the interruptHandler address into mtvec register
   mtvecValue = (int)&interruptHandler;
   __asm__ volatile("csrw mtvec, %0" ::"r"(mtvecValue));
@@ -71,11 +76,19 @@ void interruptSetup() {
 void interruptHandler() {
   // read machine interrupt pending (mip) register value to check which device
   // caused the interrupt exception
-  int mipValue;
-  __asm__ volatile("csrr %0, mip" : "=r"(mipValue));
+  int mcause_value;
+  __asm__ volatile("csrr %0, mcause" : "=r"(mcause_value));
 
-  if (mipValue & (1 << 22)) {
+  // look at the lower 31 bits (remove bit 32) and see if ISR22 causes the
+  // interrupt
+  if ((mcause_value & 0xEFFFFFFF) & (22)) {
     // PS2 interrupt
     readPS2(Mouse);
+  }
+
+  // look at the lower 31 bits (remove bit 32) and see if ISR21 causes the
+  // interrupt
+  if ((mcause_value & 0xEFFFFFFF) & (22)) {
+    // audio interrupt
   }
 }

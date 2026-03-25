@@ -2,23 +2,27 @@
 
 #define AUDIO_BASE 0xFF203040
 #define SCALE_FACTOR 1.5
-
 #define AUDIO_WORD_COUNT (1852068 / 2)
 
-int main(void) {
-  struct audio_t {
-    volatile unsigned int control;
-    volatile unsigned int fifospace;
-    volatile unsigned int left_fifo;
-    volatile unsigned int right_fifo;
-  };
+struct audio_t {
+  volatile unsigned int control;
+  volatile unsigned int fifospace;
+  volatile unsigned int left_fifo;
+  volatile unsigned int right_fifo;
+};
 
-  struct audio_t* const audiop = ((struct audio_t*)AUDIO_BASE);
+struct audio_t* const audiop = ((struct audio_t*)AUDIO_BASE);
 
-  int left_index_counter = 30;
-  int right_index_counter = 0;
-  int left, right;
+int left_index_counter = 30;
+int right_index_counter = 0;
+int left, right;
 
+void audio_setup(void) {
+  // setting 1 to the WE bit to generate an interrupt when either of the Write FIFOs are less that 25% full
+  audiop->control = 0x2;
+}
+
+void handle_audio(void) {
   // THE MAGIC TRICK:
   // Cast the 8-bit byte array into a 16-bit integer array.
   const short* audio_word_array = (const short*)Antila_Floriography;
