@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "HRTF45.h"
 #include "address_map.h"
 #include "audio.c"
 #include "greyCircle.h"
@@ -28,19 +29,19 @@ int main(void) {
 
   bool drawingBuffer1 = true;
   while (1) {
-    int tempX = Mouse.x;
-    int tempY = Mouse.y;
+    cursorX = Mouse.x;
+    cursorY = Mouse.y;
     volatile int backBufferAddress = VGABase[1];
     if (drawingBuffer1) {
       undrawBall(backBufferAddress, Mouse.buffer2X, Mouse.buffer2Y);
-      Mouse.buffer2X = tempX;
-      Mouse.buffer2Y = tempY;
+      Mouse.buffer2X = cursorX;
+      Mouse.buffer2Y = cursorY;
     } else {
       undrawBall(backBufferAddress, Mouse.buffer1X, Mouse.buffer1Y);
-      Mouse.buffer1X = tempX;
-      Mouse.buffer1Y = tempY;
+      Mouse.buffer1X = cursorX;
+      Mouse.buffer1Y = cursorY;
     }
-    drawBall(backBufferAddress, tempX, tempY, (short)WHITE);
+    drawBall(backBufferAddress, cursorX, cursorY, (short)WHITE);
     waitForSync(VGABase);
     drawingBuffer1 = !drawingBuffer1;
   }
