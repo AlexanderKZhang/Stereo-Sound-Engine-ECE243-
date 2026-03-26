@@ -1,9 +1,6 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
-#include "hrtf_matrix.h"
-#include "Antila_Floriography.h"
-
 #define AUDIO_BASE 0xFF203040
 #define SCALE_FACTOR 1.5
 #define AUDIO_WORD_COUNT (1852068 / 2)

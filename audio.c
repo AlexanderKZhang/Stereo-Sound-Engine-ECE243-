@@ -1,3 +1,5 @@
+#include "hrtf_matrix.h"
+#include "Antila_Floriography.h"
 #include "audio.h"
 
 // 1. Define the actual global variables here (no 'extern')
@@ -55,7 +57,7 @@ void handle_audio(void) {
     if (right_index_counter >= AUDIO_WORD_COUNT) {
       right_index_counter = 0;
     }
-    
+
     space = audiop->fifospace;
 
     wsrc = (space & 0x00FF0000) >> 16;
