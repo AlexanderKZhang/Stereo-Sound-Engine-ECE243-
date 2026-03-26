@@ -32,8 +32,8 @@ int main(void) {
 
     if ((wsrc > 0) && (wslc > 0)) {
       // Cast
-      int left_raw_sample_word = audio_word_array[left_index_counter] << 16;
-      int right_raw_sample_word = audio_word_array[right_index_counter] << 16;
+      int left_raw_sample_word = audio_word_array[left_index_counter] << 15;
+      int right_raw_sample_word = audio_word_array[right_index_counter] << 15;
 
       // Apply the volume scale factor if needed later
       left = (int)(left_raw_sample_word);
@@ -48,11 +48,11 @@ int main(void) {
       right_index_counter++;
 
       // Wrap around using the WORD count, not the BYTE size
-      if (left_raw_sample_word >= AUDIO_WORD_COUNT) {
-        left_raw_sample_word = 0;
+      if (left_index_counter >= AUDIO_WORD_COUNT) {
+        left_index_counter = 0;
       }
-      if (right_raw_sample_word >= AUDIO_WORD_COUNT) {
-        right_raw_sample_word = 0;
+      if (right_index_counter >= AUDIO_WORD_COUNT) {
+        right_index_counter = 0;
       }
     }
   }

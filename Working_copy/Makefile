@@ -1,6 +1,6 @@
 INSTALL	:= C:/intelFPGA/QUARTUS_Lite_V23.1
 
-MAIN	:= main.c
+MAIN	:= audio.c
 HDRS	:= address_map.h
 SRCS	:= $(MAIN)
 
