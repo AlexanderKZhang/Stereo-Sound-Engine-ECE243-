@@ -3,12 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "HRTF45.h"
 #include "address_map.h"
-#include "audio.c"
+#include "audio.h"
 #include "greyCircle.h"
 #include "ps2.h"
 #include "vga.h"
+
 
 void interruptSetup();
 void interruptHandler() __attribute__((interrupt("machine")));
@@ -55,6 +55,7 @@ void interruptSetup() {
 
   // turn on interrupts on the PS2 side
   ps2Setup();
+  audio_setup();
 
   // enable interrupts within the processor for PS2(IRQ22)
   mieValue = (0b1 << 22);
@@ -70,7 +71,7 @@ void interruptSetup() {
 
   // re-enable interrupts
   __asm__ volatile("csrs mstatus, %0" ::"r"(mstatusValue));
-
+  
   // setup done!
 }
 
@@ -89,7 +90,7 @@ void interruptHandler() {
 
   // look at the lower 31 bits (remove bit 32) and see if ISR21 causes the
   // interrupt
-  if ((mcause_value & 0xEFFFFFFF) & (22)) {
+  if ((mcause_value & 0xEFFFFFFF) & (21)) {
     // audio interrupt
   }
 }
