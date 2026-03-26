@@ -18,11 +18,12 @@ int left_index_counter = 0;
 int right_index_counter = 0;
 int left, right;
 
-//function prototype
+// function prototype
 int* convolve(const short* audio_word_array, int* result);
 
 void audio_setup(void) {
-  // setting 1 to the WE bit to generate an interrupt when either of the Write FIFOs are less that 25% full
+  // setting 1 to the WE bit to generate an interrupt when either of the Write
+  // FIFOs are less that 25% full
   audiop->control = 0x2;
 }
 
@@ -39,54 +40,55 @@ void handle_audio(void) {
 
     if ((wsrc > 0) && (wslc > 0)) {
       // Cast
-      //int left_raw_sample_word = audio_word_array[left_index_counter] << 16;
-      //int right_raw_sample_word = audio_word_array[right_index_counter] << 16;
+      // int left_raw_sample_word = audio_word_array[left_index_counter] << 16;
+      // int right_raw_sample_word = audio_word_array[right_index_counter] <<
+      // 16;
       int left_raw_sample_word = audio_word_array[left_index_counter];
       int right_raw_sample_word = audio_word_array[right_index_counter];
-      
+
       // Apply the volume scale factor if needed later
       left = (int)(left_raw_sample_word);
       right = right_raw_sample_word;
 
-      // Write to the hardware FIFOs
-      audiop->left_fifo = left;
-      audiop->right_fifo = right;
-
-      //convolve
-      int result[2] = 0;
+      // convolve
+      int result[2] = {0};
       convolve(audio_word_array, &result);
-      
 
+      // Write to the hardware FIFOs
+      audiop->left_fifo = result[0];
+      audiop->right_fifo = result[1];
 
       // Advance the index. (Change to += 11 if you still need to speed it up)
       left_index_counter++;
       right_index_counter++;
 
       // Wrap around using the WORD count, not the BYTE size
-      if (left_raw_sample_word >= AUDIO_WORD_COUNT) {
-        left_raw_sample_word = 0;
+      if (left_index_counter >= AUDIO_WORD_COUNT) {
+        left_index_counter = 0;
       }
-      if (right_raw_sample_word >= AUDIO_WORD_COUNT) {
-        right_raw_sample_word = 0;
+      if (right_index_counter >= AUDIO_WORD_COUNT) {
+        right_index_counter = 0;
       }
     }
   }
   return 0;
 }
 
-const short** fourty_five_deg_hrtf_left = (const short*) hrtf_left_matrix;
-const short** fourty_five_deg_hrtf_right = (const short*) hrtf_right_matrix;
+const short** fourty_five_deg_hrtf_left = (const short*)hrtf_left_matrix;
+const short** fourty_five_deg_hrtf_right = (const short*)hrtf_right_matrix;
 
-int* convolve(const short* audio_word_array, int* result){
-  if(left_index_counter < HRTF_LENGTH){
-    for(int i = 0; i <= left_index_counter; i++){
+int* convolve(const short* audio_word_array, int* result) {
+  if (left_index_counter < HRTF_LENGTH) {
+    for (int i = 0; i <= left_index_counter; i++) {
       result[0] += (audio_word_array[left_index_counter - i] * hrtf_left_matrix[10][i]);
       result[1] += (audio_word_array[right_index_counter - i] * hrtf_right_matrix[10][i]);
     }
-  }else{
-    for(int i = 0; i <= (HRTF_LENGTH - 1); i++){
-      result[0] += (audio_word_array[HRTF_LENGTH - i + left_index_counter] * hrtf_left_matrix[10][i]);
-      result[1] += (audio_word_array[HRTF_LENGTH - i + left_index_counter] * hrtf_right_matrix[10][i]);
+  } else {
+    for (int i = 0; i <= (HRTF_LENGTH - 1); i++) {
+      result[0] += (audio_word_array[left_index_counter - i] *
+                    hrtf_left_matrix[10][i]);
+      result[1] += (audio_word_array[left_index_counter - i] *
+                    hrtf_right_matrix[10][i]);
     }
   }
 }
