@@ -5,7 +5,7 @@ import os
 
 def build_hrtf_matrix(base_path, output_filename="hrtf_matrix.h", target_rate=8000):
     # Loop from 0 to 175 degrees in steps of 5
-    angles = range(0, 180, 5) 
+    angles = range(0, 185, 5) 
     num_angles = len(angles)
     
     left_matrix = []
