@@ -2,14 +2,14 @@
 #include "Antila_Floriography.h"
 #include "audio.h"
 #include "greyCircle.h"
-#include "math.h"
+#include <math.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
 // 1. Define the actual global variables here (no 'extern')
-extern int cursorX, cursorY;
+extern int cursorX, cursorY, angle;
 struct audio_t* const audiop = ((struct audio_t*)AUDIO_BASE);
 
 int left_index_counter = 0;
@@ -47,7 +47,7 @@ void handle_audio(void) {
 
     // convolve
     int result[2] = {0};
-    convolve(audio_word_array, result);
+    convolve(audio_word_array, result, angle);
 
     // Write to the hardware FIFOs
     audiop->left_fifo = result[0];

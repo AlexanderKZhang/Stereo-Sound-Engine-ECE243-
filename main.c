@@ -116,5 +116,6 @@ void interruptHandler() {
   // interrupt
   if ((mcause_value & 0xEFFFFFFF) & (21)) {
     // audio interrupt
+    handle_audio();
   }
 }
