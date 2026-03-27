@@ -38,7 +38,7 @@ int main(void) {
     int yFromCentre = (cursorY) - (GREYCIRCLE_HEIGHT >> 2);
     
     // compute the angle from the centre point
-    angle = calculateAngle(-yFromCentre, xFromCentre);
+    angle = calculateAngle(xFromCentre, -yFromCentre);
 
     if (angle <= 90 && angle >= -90) {
       // cursor is on the right

@@ -75,15 +75,29 @@ void handle_audio(void) {
 
 void convolve(const short* audio_word_array, int* result, int angle) {
   int hrtfIdx = (angle/5)+1;
-  if (left_index_counter < HRTF_LENGTH) {
-    for (int i = 0; i <= left_index_counter; i++) {
-      result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_left_matrix[hrtfIdx][i]);
-      result[1] += (int) (audio_word_array[right_index_counter - i] * hrtf_right_matrix[hrtfIdx][i]);
+  if (cursorX >= 0) {
+    if (left_index_counter < HRTF_LENGTH) {
+      for (int i = 0; i <= left_index_counter; i++) {
+        result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_left_matrix[hrtfIdx][i]);
+        result[1] += (int) (audio_word_array[right_index_counter - i] * hrtf_right_matrix[hrtfIdx][i]);
+      }
+    } else {
+      for (int i = 0; i <= (HRTF_LENGTH - 1); i++) {
+        result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_left_matrix[hrtfIdx][i]);
+        result[1] += (int) (audio_word_array[left_index_counter - i] * hrtf_right_matrix[hrtfIdx][i]);
+      }
     }
   } else {
-    for (int i = 0; i <= (HRTF_LENGTH - 1); i++) {
-      result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_left_matrix[hrtfIdx][i]);
-      result[1] += (int) (audio_word_array[left_index_counter - i] * hrtf_right_matrix[hrtfIdx][i]);
+    if (left_index_counter < HRTF_LENGTH) {
+      for (int i = 0; i <= left_index_counter; i++) {
+        result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_right_matrix[hrtfIdx][i]);
+        result[1] += (int) (audio_word_array[right_index_counter - i] * hrtf_left_matrix[hrtfIdx][i]);
+      }
+    } else {
+      for (int i = 0; i <= (HRTF_LENGTH - 1); i++) {
+        result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_right_matrix[hrtfIdx][i]);
+        result[1] += (int) (audio_word_array[left_index_counter - i] * hrtf_left_matrix[hrtfIdx][i]);
+      }
     }
   }
 }
