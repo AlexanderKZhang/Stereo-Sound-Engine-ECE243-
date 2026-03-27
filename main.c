@@ -13,6 +13,8 @@
 void interruptSetup();
 void interruptHandler() __attribute__((interrupt("machine")));
 
+int cursorX, cursorY, angle;
+
 struct mouse Mouse;
 
 int main(void) {
@@ -31,6 +33,28 @@ int main(void) {
   while (1) {
     cursorX = Mouse.x;
     cursorY = Mouse.y;
+    // extract mouse position relative to centre of screen
+    int xFromCentre = (cursorX) - (GREYCIRCLE_WIDTH >> 2);
+    int yFromCentre = (cursorY) - (GREYCIRCLE_HEIGHT >> 2);
+    
+    // compute the angle from the centre point
+    angle = calculateAngle(-yFromCentre, xFromCentre);
+
+    if (angle <= 90 && angle >= -90) {
+      // cursor is on the right
+      // map the angle to a range of 0-90
+      angle = -(angle+90);
+    } else {
+      // cursor is on the left
+      // map the angle to a range of 0-90
+      if (angle > 0) {
+        angle -= 90;
+      } else {
+        angle += 90;
+      }
+      angle = -(angle+90);
+    }
+
     volatile int backBufferAddress = VGABase[1];
     if (drawingBuffer1) {
       undrawBall(backBufferAddress, Mouse.buffer2X, Mouse.buffer2Y);

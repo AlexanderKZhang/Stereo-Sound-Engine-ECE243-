@@ -41,8 +41,7 @@ void waitForSync(volatile int* VGABase) {
 // draws a specific colour into a pixel in the back buffer at the specified x
 // and y coordinates provided
 void drawPixel(volatile int backBufferAddress, int x, int y, short colour) {
-  volatile short* pixelAddress =
-      (volatile short*)(backBufferAddress + (y << 10) + (x << 1));
+  volatile short* pixelAddress = (volatile short*)(backBufferAddress + (y << 10) + (x << 1));
   *(pixelAddress) = colour;
 }
 
@@ -78,15 +77,13 @@ void undrawBall(volatile int backBufferAddress, int x, int y) {
     if (i == x - 2 || i == x + 2) {
       for (int j = y - 1; j < y + 2; j++) {
         if (i >= 0 && i < GREYCIRCLE_WIDTH && j >= 0 && j < GREYCIRCLE_HEIGHT) {
-          drawPixel(backBufferAddress, i, j,
-                    greyCircle[GREYCIRCLE_WIDTH * j + i]);
+          drawPixel(backBufferAddress, i, j, greyCircle[GREYCIRCLE_WIDTH * j + i]);
         }
       }
     } else {
       for (int j = y - 2; j < y + 3; j++) {
         if (i >= 0 && i < GREYCIRCLE_WIDTH && j >= 0 && j < GREYCIRCLE_HEIGHT) {
-          drawPixel(backBufferAddress, i, j,
-                    greyCircle[GREYCIRCLE_WIDTH * j + i]);
+          drawPixel(backBufferAddress, i, j, greyCircle[GREYCIRCLE_WIDTH * j + i]);
         }
       }
     }

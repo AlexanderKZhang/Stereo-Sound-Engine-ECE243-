@@ -27,6 +27,7 @@ extern const short** fourty_five_deg_hrtf_right;
 // Function prototypes
 void audio_setup(void);
 void handle_audio(void);
-void convolve(const short* audio_word_array, int* result);
+void convolve(const short* audio_word_array, int* result, int angle);
+int calculateAngle(int x, int y);
 
 #endif // AUDIO_H

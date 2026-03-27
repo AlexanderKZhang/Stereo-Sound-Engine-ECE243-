@@ -1,8 +1,15 @@
 #include "hrtf_matrix.h"
 #include "Antila_Floriography.h"
 #include "audio.h"
+#include "greyCircle.h"
+#include "math.h"
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 // 1. Define the actual global variables here (no 'extern')
+extern int cursorX, cursorY;
 struct audio_t* const audiop = ((struct audio_t*)AUDIO_BASE);
 
 int left_index_counter = 0;
@@ -66,16 +73,29 @@ void handle_audio(void) {
 }
 
 
-void convolve(const short* audio_word_array, int* result) {
+void convolve(const short* audio_word_array, int* result, int angle) {
+  int hrtfIdx = (angle/5)+1;
   if (left_index_counter < HRTF_LENGTH) {
     for (int i = 0; i <= left_index_counter; i++) {
-      result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_left_matrix[10][i]);
-      result[1] += (int) (audio_word_array[right_index_counter - i] * hrtf_right_matrix[10][i]);
+      result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_left_matrix[hrtfIdx][i]);
+      result[1] += (int) (audio_word_array[right_index_counter - i] * hrtf_right_matrix[hrtfIdx][i]);
     }
   } else {
     for (int i = 0; i <= (HRTF_LENGTH - 1); i++) {
-      result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_left_matrix[10][i]);
-      result[1] += (int) (audio_word_array[left_index_counter - i] * hrtf_right_matrix[10][i]);
+      result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_left_matrix[hrtfIdx][i]);
+      result[1] += (int) (audio_word_array[left_index_counter - i] * hrtf_right_matrix[hrtfIdx][i]);
     }
   }
+}
+
+int calculateAngle(int x, int y) {
+  double angle = atan2((double) y, (double) x);
+
+  // convert to degrees
+  angle *= 180/M_PI;
+  
+  // round angle to nearest multiple of 5
+  angle = round(angle/5) * 5;
+
+  return angle;
 }
