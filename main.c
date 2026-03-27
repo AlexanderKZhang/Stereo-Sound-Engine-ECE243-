@@ -43,7 +43,7 @@ int main(void) {
     if (angle <= 90 && angle >= -90) {
       // cursor is on the right
       // map the angle to a range of 0-90
-      angle = -(angle+90);
+      angle = 180 - (angle+90);
     } else {
       // cursor is on the left
       // map the angle to a range of 0-90
@@ -52,7 +52,7 @@ int main(void) {
       } else {
         angle += 90;
       }
-      angle = -(angle+90);
+      angle = 180 - (angle+90);
     }
 
     volatile int backBufferAddress = VGABase[1];
