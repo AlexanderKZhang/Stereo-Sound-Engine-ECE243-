@@ -102,6 +102,7 @@ void convolve(const short* audio_word_array, int* result, int angle) {
   }
 }
 
+//return angle in degree, using atan2 so angle is (0, 180) from positive x axis to negative x axis in quadrant 1, 2; (0, -180) from quadrant 4 to quadrant 3
 int calculateAngle(int x, int y) {
   double angle = atan2((double) y, (double) x);
 

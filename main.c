@@ -38,23 +38,11 @@ int main(void) {
     int yFromCentre = (cursorY) - (GREYCIRCLE_HEIGHT >> 2);
     
     // compute the angle from the centre point
-    angle = calculateAngle(xFromCentre, -yFromCentre);
+    // we want angle relative to y axis, negative angles are mapped to quadrant 2, 3, positive angles are mapped to quadrant 1, 4
+    // this is achieve by treating x as y, y as x
+    angle = calculateAngle(-yFromCentre, xFromCentre);
 
-    if (angle <= 90 && angle >= -90) {
-      // cursor is on the right
-      // map the angle to a range of 0-90
-      angle = 180 - (angle+90);
-    } else {
-      // cursor is on the left
-      // map the angle to a range of 0-90
-      if (angle > 0) {
-        angle -= 90;
-      } else {
-        angle += 90;
-      }
-      angle = 180 - (angle+90);
-    }
-
+  
     volatile int backBufferAddress = VGABase[1];
     if (drawingBuffer1) {
       undrawBall(backBufferAddress, Mouse.buffer2X, Mouse.buffer2Y);
