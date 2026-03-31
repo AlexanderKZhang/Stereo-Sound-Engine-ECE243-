@@ -12,5 +12,6 @@ void drawBall(volatile int backBufferAddress, int x, int y, short colour);
 void undrawBall(volatile int backBufferAddress, int x, int y);
 void video_text(int x, int y, char * text_ptr);
 void intToStr(int num, char* string);
+int abs(int num);
 
 #endif

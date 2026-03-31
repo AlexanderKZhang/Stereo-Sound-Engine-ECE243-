@@ -111,10 +111,15 @@ void intToStr(int num, char* string) {
   if (num < 0) num = 0;
 
   // Extract each digit mathematically and add '0' (0x30) to convert it to ASCII
-  string[0] = (num / 100) + '0';           // The hundreds place
-  string[1] = ((num / 10) % 10) + '0';     // The tens place
-  string[2] = (num % 10) + '0';            // The ones place
+  string[0] = abs((num / 100)) + '0';           // The hundreds place
+  string[1] = abs(((num / 10) % 10)) + '0';     // The tens place
+  string[2] = abs((num % 10)) + '0';            // The ones place
   
   // Always end C-strings with a null terminator!
   string[3] = '\0'; 
+}
+
+int abs(int num) {
+  if (num < 0) { return -num; }
+  return num;
 }

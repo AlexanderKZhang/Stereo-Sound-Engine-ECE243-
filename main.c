@@ -34,8 +34,8 @@ int main(void) {
     cursorX = Mouse.x;
     cursorY = Mouse.y;
     // extract mouse position relative to centre of screen
-    int xFromCentre = (cursorX) - (GREYCIRCLE_WIDTH >> 2);
-    int yFromCentre = (cursorY) - (GREYCIRCLE_HEIGHT >> 2);
+    int xFromCentre = (cursorX) - (GREYCIRCLE_WIDTH >> 1);
+    int yFromCentre = (cursorY) - (GREYCIRCLE_HEIGHT >> 1);
     
     // compute the angle from the centre point
     // we want angle relative to y axis, negative angles are mapped to quadrant 2, 3, positive angles are mapped to quadrant 1, 4
