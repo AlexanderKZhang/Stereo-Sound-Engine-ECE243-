@@ -89,3 +89,17 @@ void undrawBall(volatile int backBufferAddress, int x, int y) {
     }
   }
 }
+
+void video_text(int x, int y, char * text_ptr) {
+  int offset;
+  volatile char * character_buffer =
+  (char *)FPGA_CHAR_BASE; // video character buffer
+  /* assume that the text string fits on one line */
+  offset = (y << 7) + x;
+  while (*(text_ptr)) {
+    *(character_buffer + offset) =
+    *(text_ptr); // write to the character buffer
+    ++text_ptr;
+    ++offset;
+  }
+}

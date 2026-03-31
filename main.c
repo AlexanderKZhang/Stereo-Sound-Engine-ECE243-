@@ -41,7 +41,7 @@ int main(void) {
     // we want angle relative to y axis, negative angles are mapped to quadrant 2, 3, positive angles are mapped to quadrant 1, 4
     // this is achieve by treating x as y, y as x
     angle = calculateAngle(-yFromCentre, xFromCentre);
-
+    char *angleStr = "   ";
   
     volatile int backBufferAddress = VGABase[1];
     if (drawingBuffer1) {
@@ -54,6 +54,7 @@ int main(void) {
       Mouse.buffer1Y = cursorY;
     }
     drawBall(backBufferAddress, cursorX, cursorY, (short)WHITE);
+    video_text(8, 8, snprintf(angleStr, sizeof(angleStr), "%d", angle));
     waitForSync(VGABase);
     drawingBuffer1 = !drawingBuffer1;
   }
