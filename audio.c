@@ -1,8 +1,9 @@
 #include "hrtf_matrix.h"
-#include "Antila_Floriography.h"
 #include "audio.h"
 #include "greyCircle.h"
 #include <math.h>
+#include "Antila_Floriography.h"
+#include "korg_mono_signed_sixteen_bit_PCM.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -31,7 +32,7 @@ void audio_setup(void) {
 void handle_audio(void) {
   // THE MAGIC TRICK:
   // Cast the 8-bit byte array into a 16-bit integer array.
-  const short* audio_word_array = (const short*)Antila_Floriography;
+  const short* audio_word_array = (const short*)korg_mono_singed_sixteen_bit_PCM;
 
   unsigned int space = audiop->fifospace;
     
