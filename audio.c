@@ -75,8 +75,8 @@ void handle_audio(void) {
 
 
 void convolve(const short* audio_word_array, int* result, int angle) {
-  int hrtfIdx = (angle/5);
-  if (cursorX >= 0) {
+  int hrtfIdx = (angle > 0) ? (angle/5) : (-angle/5);
+  if (angle > 0) {
     if (left_index_counter < HRTF_LENGTH) {
       for (int i = 0; i <= left_index_counter; i++) {
         result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_left_matrix[hrtfIdx][i]);

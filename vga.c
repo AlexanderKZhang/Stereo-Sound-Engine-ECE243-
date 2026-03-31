@@ -103,3 +103,18 @@ void video_text(int x, int y, char * text_ptr) {
     ++offset;
   }
 }
+
+// Note: 'buffer' must be an array of at least 4 characters to hold the 3 digits + null terminator
+void intToStr(int num, char* string) {
+  // Cap the number to prevent overflowing the 3 digits
+  if (num > 999) num = 999;
+  if (num < 0) num = 0;
+
+  // Extract each digit mathematically and add '0' (0x30) to convert it to ASCII
+  string[0] = (num / 100) + '0';           // The hundreds place
+  string[1] = ((num / 10) % 10) + '0';     // The tens place
+  string[2] = (num % 10) + '0';            // The ones place
+  
+  // Always end C-strings with a null terminator!
+  string[3] = '\0'; 
+}

@@ -41,7 +41,9 @@ int main(void) {
     // we want angle relative to y axis, negative angles are mapped to quadrant 2, 3, positive angles are mapped to quadrant 1, 4
     // this is achieve by treating x as y, y as x
     angle = calculateAngle(-yFromCentre, xFromCentre);
-    char *angleStr = "   ";
+    char angleStr[4];
+
+    intToStr(angle, angleStr);
   
     volatile int backBufferAddress = VGABase[1];
     if (drawingBuffer1) {
@@ -54,7 +56,7 @@ int main(void) {
       Mouse.buffer1Y = cursorY;
     }
     drawBall(backBufferAddress, cursorX, cursorY, (short)WHITE);
-    video_text(8, 8, snprintf(angleStr, sizeof(angleStr), "%d", angle));
+    video_text(8, 8, angleStr);
     waitForSync(VGABase);
     drawingBuffer1 = !drawingBuffer1;
   }
@@ -96,14 +98,14 @@ void interruptHandler() {
 
   // look at the lower 31 bits (remove bit 32) and see if ISR22 causes the
   // interrupt
-  if ((mcause_value & 0xEFFFFFFF) & (22)) {
+  if ((mcause_value & 0x7FFFFFFF) & (22)) {
     // PS2 interrupt
     readPS2(Mouse);
   }
 
   // look at the lower 31 bits (remove bit 32) and see if ISR21 causes the
   // interrupt
-  if ((mcause_value & 0xEFFFFFFF) & (21)) {
+  if ((mcause_value & 0x7FFFFFFF) & (21)) {
     // audio interrupt
     handle_audio();
   }
