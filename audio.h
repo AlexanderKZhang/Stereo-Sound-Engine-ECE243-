@@ -3,7 +3,7 @@
 
 #define AUDIO_BASE 0xFF203040
 #define SCALE_FACTOR 1.5
-#define AUDIO_WORD_COUNT (1852068 / 2) //Antila_Floriography
+#define AUDIO_WORD_COUNT (2171870 / 2) //Antila_Floriography
 // #define AUDIO_WORD_COUNT (94920 / 2)
 
 // Note: HRTF_LENGTH is used in convolve but wasn't defined. 

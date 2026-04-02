@@ -9,12 +9,12 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-// 1. Define the actual global variables here (no 'extern')
+// Define the actual global variables here (no 'extern')
 extern int cursorX, cursorY, angle;
 struct audio_t* const audiop = ((struct audio_t*)AUDIO_BASE);
 
-int left_index_counter = 0;
-int right_index_counter = 0;
+int left_index_counter = 319802/2;
+int right_index_counter = 319802/2;
 int left = 0;
 int right = 0;
 
@@ -61,10 +61,10 @@ void handle_audio(void) {
 
     // Wrap around using the WORD count, not the BYTE size
     if (left_index_counter >= AUDIO_WORD_COUNT) {
-      left_index_counter = 0;
+      left_index_counter = 319802/2;
     }
     if (right_index_counter >= AUDIO_WORD_COUNT) {
-      right_index_counter = 0;
+      right_index_counter = 319802/2;
     }
 
     space = audiop->fifospace;
