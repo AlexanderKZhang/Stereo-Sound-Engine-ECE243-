@@ -30,6 +30,5 @@ void audio_setup(void);
 void handle_audio(void);
 void convolve(const short* audio_word_array, int* result, int angle);
 int calculateAngle(int x, int y);
-void ILD(int result[2]);
 
 #endif // AUDIO_H

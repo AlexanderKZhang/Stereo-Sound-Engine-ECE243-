@@ -9,10 +9,6 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#ifndef MAX_AMP
-#define MAX_AMP 32768
-#endif
-
 // 1. Define the actual global variables here (no 'extern')
 extern int cursorX, cursorY, angle;
 struct audio_t* const audiop = ((struct audio_t*)AUDIO_BASE);
@@ -54,8 +50,6 @@ void handle_audio(void) {
     // convolve
     int result[2] = {0};
     convolve(audio_word_array, result, angle);
-
-    ILD(result);
 
     // Write to the hardware FIFOs
     audiop->left_fifo = result[0];
@@ -121,29 +115,4 @@ int calculateAngle(int x, int y) {
   angle = round(angle/5) * 5;
 
   return angle;
-}
-
-void ILD(int result[2]) {
-  int distX = cursorX - (GREYCIRCLE_WIDTH >> 1);
-  int distY = cursorY - (GREYCIRCLE_HEIGHT >> 1);
-
-  // compute distance from centre of the screen (inverse distance law)
-  // I ~ 1/r^2 -> I ~ p^2 -> p ~ 1/r
-  // I: sound intensity
-  // p: sound pressure (this is apparently what headphones output)
-  double dist = sqrt((distX*distX) + (distY*distY));
-  
-  // to avoid zero division, choose lower bound for distance
-  if (dist < 1) dist = 1;
-  
-  result[0] /= dist;
-  result[1] /= dist;
-
-  if (result[0] > MAX_AMP) {
-    result[0] = MAX_AMP;
-  }
-
-  if (result[1] > MAX_AMP) {
-    result[1] = MAX_AMP;
-  }
 }
