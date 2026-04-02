@@ -98,14 +98,14 @@ void interruptHandler() {
 
   // look at the lower 31 bits (remove bit 32) and see if ISR22 causes the
   // interrupt
-  if ((mcause_value & 0x7FFFFFFF) & (22)) {
+  if ((mcause_value & 0x7FFFFFFF) == (22)) {
     // PS2 interrupt
     readPS2(Mouse);
   }
 
   // look at the lower 31 bits (remove bit 32) and see if ISR21 causes the
   // interrupt
-  if ((mcause_value & 0x7FFFFFFF) & (21)) {
+  if ((mcause_value & 0x7FFFFFFF) == (21)) {
     // audio interrupt
     handle_audio();
   }
