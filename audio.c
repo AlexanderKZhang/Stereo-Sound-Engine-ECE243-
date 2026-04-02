@@ -33,7 +33,7 @@ void audio_setup(void) {
 void handle_audio(void) {
   // THE MAGIC TRICK:
   // Cast the 8-bit byte array into a 16-bit integer array.
-  const short* audio_word_array = (const short*)korg_mono_singed_sixteen_bit_PCM;
+  const short* audio_word_array = (const short*)Antila_Floriography;
 
   unsigned int space = audiop->fifospace;
     

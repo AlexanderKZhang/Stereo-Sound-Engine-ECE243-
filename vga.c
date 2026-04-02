@@ -7,6 +7,9 @@
 #define buffer1 0x08000000
 #define buffer2 0x08040000
 
+// short Buffer1[240][320] __attribute__((section(".vga_front_buffer")));
+// short Buffer2[240][320] __attribute__((section(".vga_back_buffer")));
+
 int* vgaSetup(unsigned int VGABaseAddress) {
   // set the address to the buffer base
   int* vgaBase = (int*)VGABaseAddress;
