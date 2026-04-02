@@ -43,7 +43,7 @@ int main(void) {
     angle = calculateAngle(-yFromCentre, xFromCentre);
     char angleStr[4];
 
-    intToStr(angle, angleStr);
+    intToStr(abs(angle), angleStr);
   
     volatile int backBufferAddress = VGABase[1];
     if (drawingBuffer1) {
