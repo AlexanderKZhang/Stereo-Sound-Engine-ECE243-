@@ -7,6 +7,8 @@
 #define buffer1 0x08000000
 #define buffer2 0x08040000
 
+// short buffer2[GREYCIRCLE_WIDTH*GREYCIRCLE_HEIGHT] __attribute__((section(".vga_backbuffer"), aligned(4)));
+
 int* vgaSetup(unsigned int VGABaseAddress) {
   // set the address to the buffer base
   int* vgaBase = (int*)VGABaseAddress;
@@ -97,8 +99,7 @@ void video_text(int x, int y, char * text_ptr) {
   /* assume that the text string fits on one line */
   offset = (y << 7) + x;
   while (*(text_ptr)) {
-    *(character_buffer + offset) =
-    *(text_ptr); // write to the character buffer
+    *(character_buffer + offset) = *(text_ptr); // write to the character buffer
     ++text_ptr;
     ++offset;
   }
