@@ -10,7 +10,7 @@
 #endif
 
 #ifndef MAX_AMP
-#define MAX_AMP 32768
+#define MAX_AMP 2147483647
 #endif
 
 // Define the actual global variables here (no 'extern')
@@ -131,10 +131,12 @@ void ILD(int result[2]) {
   // I ~ 1/r^2 -> I ~ p^2 -> p ~ 1/r
   // I: sound intensity
   // p: sound pressure (this is apparently what headphones output)
-  double dist = sqrt((distX*distX) + (distY*distY));
+  int dist = (distX*distX) + (distY*distY);
   
+  // scale down the avoid huge divisor to be applied to the audio (to avoid heavy computation of square-root)
+  dist = dist >> 12;
   // to avoid zero division, choose lower bound for distance
-  if (dist < 1) dist = 1;
+  if (dist == 0) dist = 1;
   
   result[0] /= dist;
   result[1] /= dist;
