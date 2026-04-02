@@ -108,7 +108,6 @@ void video_text(int x, int y, char * text_ptr) {
 void intToStr(int num, char* string) {
   // Cap the number to prevent overflowing the 3 digits
   if (num > 999) num = 999;
-  if (num < 0) num = 0;
 
   // Extract each digit mathematically and add '0' (0x30) to convert it to ASCII
   string[0] = abs((num / 100)) + '0';           // The hundreds place
