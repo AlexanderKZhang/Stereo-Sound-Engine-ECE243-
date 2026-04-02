@@ -21,6 +21,7 @@ int right = 0;
 const short** fourty_five_deg_hrtf_left = (const short**)hrtf_left_matrix;
 const short** fourty_five_deg_hrtf_right = (const short**)hrtf_right_matrix;
 
+short zero_array[210000] = {0};
 
 // Set up the audio
 void audio_setup(void) {
