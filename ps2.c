@@ -31,14 +31,17 @@ Exactly like Byte 2, but for the vertical axis.
 */
 
 #include "ps2.h"
-
 #include "address_map.h"
 
+#define ELEVATION_MAX 90
+#define ELEVATION_MIN -40
+
 extern struct mouse Mouse;
+extern int elevation;
 
 void ps2Setup() {
   // PS/2 mouse needs to be reset (must be already plugged in)
-  *Mouse.PS2_ptr = 0xFF;  // reset
+  *(Mouse.PS2_ptr) = 0xFF;  // reset
 
   // wait for the PS2 to finish internal setup before proceeding
   // wait for 0xFA
@@ -49,10 +52,10 @@ void ps2Setup() {
   waitForByte(0x00);
 
   // mouse inserted; initialize sending of data
-  *Mouse.PS2_ptr = 0xF4;
+  *(Mouse.PS2_ptr) = 0xF4;
 
   // setup interrupts for the PS2 port
-  Mouse.PS2_ptr[1] = Mouse.PS2_ptr[1] | 0b1;
+  Mouse.PS2_ptr[1] = Mouse.PS2_ptr[1] | 0b1; 
 }
 
 void readPS2() {
@@ -80,6 +83,8 @@ void readPS2() {
       // decipher the PS2 data bytes
       int xData = (bytes[0] & (1 << 4)) ? (0xFFFFFF00 | bytes[1]) : bytes[1];
       int yData = (bytes[0] & (1 << 5)) ? (0xFFFFFF00 | bytes[2]) : bytes[2];
+      int leftClickData = (bytes[0] & (1));
+      int rightClickData = (bytes[0] & (1 << 1));
 
       if (xData) {
         Mouse.x += xData;
@@ -95,6 +100,14 @@ void readPS2() {
           Mouse.y = 0;
         else if (Mouse.y >= 240)
           Mouse.y = 239;
+      }
+
+      if(leftClickData && elevation < ELEVATION_MAX){
+        elevation += 10;
+      }
+
+      if(leftClickData && elevation > ELEVATION_MIN){
+        elevation -= 10;
       }
     }
   }

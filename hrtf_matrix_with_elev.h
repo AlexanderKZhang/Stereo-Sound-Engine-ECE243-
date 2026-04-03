@@ -4,6 +4,9 @@
 // De-interleaved, Interpolated, & Downsampled HRTF 3D Matrices (8kHz)
 // Dimensions: [14 Elevations] x [37 Azimuths] x [23 Samples]
 
+#define NUM_ANGLES 37
+#define HRTF_LENGTH 23
+
 const short hrtf_left_matrix[14][37][23] = {
   // Elevation: -40 degrees
   {

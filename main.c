@@ -13,7 +13,7 @@
 void interruptSetup();
 void interruptHandler() __attribute__((interrupt("machine")));
 
-int cursorX, cursorY, angle;
+int cursorX, cursorY, angle, elevation;
 
 struct mouse Mouse;
 
@@ -29,6 +29,10 @@ int main(void) {
   volatile int* VGABase = vgaSetup((unsigned int)PIXEL_BUF_CTRL_BASE);
   interruptSetup();
 
+  //some fix text that will be drawn to the screen
+  char degree_fix_text[10] = "Azimuths: ";
+  char elevation_fix_text[12] = "Elevation: ";
+
   bool drawingBuffer1 = true;
   while (1) {
     cursorX = Mouse.x;
@@ -42,8 +46,10 @@ int main(void) {
     // this is achieve by treating x as y, y as x
     angle = calculateAngle(-yFromCentre, xFromCentre);
     char angleStr[4];
-
     intToStr(abs(angle), angleStr);
+    
+    char elevationStr[4];
+    intToStr(elevation, elevationStr);
   
     volatile int backBufferAddress = VGABase[1];
     if (drawingBuffer1) {
@@ -57,6 +63,9 @@ int main(void) {
     }
     drawBall(backBufferAddress, cursorX, cursorY, (short)WHITE);
     video_text(8, 8, angleStr);
+    video_text(16, 8, degree_fix_text);
+    video_text(304, 8, elevation_fix_text);
+    video_text(312, 8, elevationStr);
     waitForSync(VGABase);
     drawingBuffer1 = !drawingBuffer1;
   }

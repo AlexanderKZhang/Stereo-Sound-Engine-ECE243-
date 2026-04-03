@@ -1,9 +1,10 @@
-#include "hrtf_matrix.h"
+#include <math.h>
+
 #include "audio.h"
 #include "greyCircle.h"
-#include <math.h>
 #include "Antila_Floriography.h"
 #include "korg_mono_signed_sixteen_bit_PCM.h"
+#include "hrtf_matrix_with_elev.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -14,13 +15,11 @@
 #endif
 
 // Define the actual global variables here (no 'extern')
-extern int cursorX, cursorY, angle;
+extern int cursorX, cursorY, angle, elevation;
 struct audio_t* const audiop = ((struct audio_t*)AUDIO_BASE);
 
 int left_index_counter = 319802/2;
 int right_index_counter = 319802/2;
-int left = 0;
-int right = 0;
 
 const short** fourty_five_deg_hrtf_left = (const short**)hrtf_left_matrix;
 const short** fourty_five_deg_hrtf_right = (const short**)hrtf_right_matrix;
@@ -46,10 +45,6 @@ void handle_audio(void) {
   while ((wsrc > 0) && (wslc > 0)) {
     int left_raw_sample_word = audio_word_array[left_index_counter];
     int right_raw_sample_word = audio_word_array[right_index_counter];
-
-    // Apply the volume scale factor if needed later
-    left = (int)(left_raw_sample_word);
-    right = right_raw_sample_word;
 
     // convolve
     int result[2] = {0};
@@ -82,29 +77,30 @@ void handle_audio(void) {
 
 
 void convolve(const short* audio_word_array, int* result, int angle) {
+  int elevationIdx = (elevation + 40) / 10;
   int hrtfIdx = (angle > 0) ? (angle/5) : (-angle/5);
   if (angle > 0) {
     if (left_index_counter < HRTF_LENGTH) {
       for (int i = 0; i <= left_index_counter; i++) {
-        result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_left_matrix[hrtfIdx][i]);
-        result[1] += (int) (audio_word_array[right_index_counter - i] * hrtf_right_matrix[hrtfIdx][i]);
+        result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_left_matrix[elevationIdx][hrtfIdx][i]);
+        result[1] += (int) (audio_word_array[right_index_counter - i] * hrtf_right_matrix[elevationIdx][hrtfIdx][i]);
       }
     } else {
       for (int i = 0; i <= (HRTF_LENGTH - 1); i++) {
-        result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_left_matrix[hrtfIdx][i]);
-        result[1] += (int) (audio_word_array[right_index_counter - i] * hrtf_right_matrix[hrtfIdx][i]);
+        result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_left_matrix[elevationIdx][hrtfIdx][i]);
+        result[1] += (int) (audio_word_array[right_index_counter - i] * hrtf_right_matrix[elevationIdx][hrtfIdx][i]);
       }
     }
   } else {
     if (left_index_counter < HRTF_LENGTH) {
       for (int i = 0; i <= left_index_counter; i++) {
-        result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_right_matrix[hrtfIdx][i]);
-        result[1] += (int) (audio_word_array[right_index_counter - i] * hrtf_left_matrix[hrtfIdx][i]);
+        result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_right_matrix[elevationIdx][hrtfIdx][i]);
+        result[1] += (int) (audio_word_array[right_index_counter - i] * hrtf_left_matrix[elevationIdx][hrtfIdx][i]);
       }
     } else {
       for (int i = 0; i <= (HRTF_LENGTH - 1); i++) {
-        result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_right_matrix[hrtfIdx][i]);
-        result[1] += (int) (audio_word_array[right_index_counter - i] * hrtf_left_matrix[hrtfIdx][i]);
+        result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_right_matrix[elevationIdx][hrtfIdx][i]);
+        result[1] += (int) (audio_word_array[right_index_counter - i] * hrtf_left_matrix[elevationIdx][hrtfIdx][i]);
       }
     }
   }
