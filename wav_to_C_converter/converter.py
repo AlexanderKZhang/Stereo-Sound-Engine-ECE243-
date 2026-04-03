@@ -1,70 +1,119 @@
+import os
+import re
 import numpy as np
 from scipy.io import wavfile
 from scipy import signal
-import os
 
-def build_hrtf_matrix(base_path, output_filename="hrtf_matrix.h", target_rate=8000):
-    # Loop from 0 to 175 degrees in steps of 5
-    angles = range(0, 185, 5) 
-    num_angles = len(angles)
+# Explicitly set the path to your MIT KEMAR dataset folder
+DATASET_PATH = r"C:\Users\alexa\Downloads\diffuse"
+
+def build_hrtf_matrices():
+    print(f"Scanning directory: {DATASET_PATH} ...")
     
-    left_matrix = []
-    right_matrix = []
-    array_length = 0
+    # 1. Catalog all available WAV files by Elevation and Azimuth recursively
+    catalog = {}
+    for root, dirs, files in os.walk(DATASET_PATH):
+        for filename in files:
+            if filename.lower().endswith('.wav'):
+                # Matches MIT KEMAR format: H-40e013a.wav or H00e000a.wav
+                match = re.search(r'H(-?\d+)e(\d+)a', filename, re.IGNORECASE)
+                if match:
+                    elev = int(match.group(1))
+                    az = int(match.group(2))
+                    
+                    if elev not in catalog:
+                        catalog[elev] = {}
+                    
+                    # Store the full absolute path so we can open it from anywhere
+                    catalog[elev][az] = os.path.join(root, filename)
+
+    if not catalog:
+        print(f"Error: No valid HRTF .wav files found in {DATASET_PATH} or its sub-folders.")
+        print("Double check that the folder path is correct and contains the .wav files.")
+        return
+
+    # Define the required 14x37 grid 
+    target_elevs = [-40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    target_azs = [i * 5 for i in range(37)] # 0, 5, 10 ... 180
+
+    # Initialize empty 3D matrices
+    left_matrix = np.zeros((14, 37, 23), dtype=int)
+    right_matrix = np.zeros((14, 37, 23), dtype=int)
+
+    print(f"Found files across {len(catalog)} elevation levels.")
+    print("De-interleaving stereo data, interpolating angles, and downsampling to 8kHz...")
     
-    for i in angles:
-        # 1. Format the path correctly with :03d to ensure 3-digit zero-padding
-        filename = f"H0e{i:03d}a.wav"
-        full_path = os.path.join(base_path, filename)
-        
-        print(f"Processing {filename}...")
-        
-        try:
-            original_rate, data = wavfile.read(full_path)
+    for e_idx, target_e in enumerate(target_elevs):
+        if target_e not in catalog:
+            print(f"Warning: Missing elevation {target_e} in directory! Padding with zeros.")
+            continue
             
-            left_channel = data[:, 0]
-            right_channel = data[:, 1]
+        available_azs = list(catalog[target_e].keys())
+        
+        for a_idx, target_a in enumerate(target_azs):
+            # 2. Nearest Neighbor Interpolation (Fixes the zero gaps)
+            closest_az = min(available_azs, key=lambda x: abs(x - target_a))
+            filepath = catalog[target_e][closest_az]
             
-            # Downsample to 8kHz
-            if original_rate != target_rate:
-                num_target_samples = int(len(left_channel) * target_rate / original_rate)
-                left_ready = signal.resample(left_channel, num_target_samples)
-                right_ready = signal.resample(right_channel, num_target_samples)
+            # 3. Read raw WAV file
+            fs, data = wavfile.read(filepath)
+            
+            # 4. Extract and De-interleave Stereo Channels
+            frames_to_take = min(128, len(data))
+            
+            if len(data.shape) == 2:
+                left_channel = data[:frames_to_take, 0]   # Channel 0
+                right_channel = data[:frames_to_take, 1]  # Channel 1
             else:
-                left_ready = left_channel
-                right_ready = right_channel
-                
-            left_ready = np.round(left_ready).astype(np.int16)
-            right_ready = np.round(right_ready).astype(np.int16)
+                left_channel = data[:frames_to_take]
+                right_channel = data[:frames_to_take]
             
-            array_length = len(left_ready)
-            left_matrix.append(left_ready)
-            right_matrix.append(right_ready)
+            # 5. Downsample to exactly 23 samples
+            left_8k = signal.resample(left_channel, 23)
+            right_8k = signal.resample(right_channel, 23)
             
-        except Exception as e:
-            print(f"Failed on {filename}: {e}")
-            return
-            
-    # 2. Write the 2D Matrix directly to a C Header
-    print(f"\nGenerating {output_filename}...")
+            left_matrix[e_idx, a_idx] = np.round(left_8k).astype(int)
+            right_matrix[e_idx, a_idx] = np.round(right_8k).astype(int)
+
+    # 6. Write out the clean C header file back into your GitHub folder
+    output_filename = 'hrtf_matrix_8k_fixed.h'
+    print(f"\nWriting clean data to {output_filename}...")
+    
     with open(output_filename, 'w') as f:
-        f.write(f"// Auto-generated {target_rate}Hz HRTF Matrix\n\n")
-        f.write(f"#define NUM_ANGLES {num_angles}\n")
-        f.write(f"#define HRTF_LENGTH {array_length}\n\n")
+        f.write("#ifndef HRTF_MATRIX_8K_FIXED_H\n")
+        f.write("#define HRTF_MATRIX_8K_FIXED_H\n\n")
+        f.write("// De-interleaved, Interpolated, & Downsampled HRTF 3D Matrices (8kHz)\n")
+        f.write("// Dimensions: [14 Elevations] x [37 Azimuths] x [23 Samples]\n\n")
         
-        # Write Left Matrix
-        f.write(f"const short hrtf_left_matrix[{num_angles}][{array_length}] = {{\n")
-        for arr in left_matrix:
-            f.write("    {" + ", ".join(map(str, arr)) + "},\n")
+        # Write Left Matrix passing the target_elevs list
+        f.write("const short hrtf_left_matrix[14][37][23] = {\n")
+        write_matrix_to_file(f, left_matrix, target_elevs)
         f.write("};\n\n")
         
-        # Write Right Matrix
-        f.write(f"const short hrtf_right_matrix[{num_angles}][{array_length}] = {{\n")
-        for arr in right_matrix:
-            f.write("    {" + ", ".join(map(str, arr)) + "},\n")
-        f.write("};\n")
+        # Write Right Matrix passing the target_elevs list
+        f.write("const short hrtf_right_matrix[14][37][23] = {\n")
+        write_matrix_to_file(f, right_matrix, target_elevs)
+        f.write("};\n\n")
         
-    print("Success! Matrix generated.")
+        f.write("#endif // HRTF_MATRIX_8K_FIXED_H\n")
 
-# Run it using 'r' to specify a raw string, preventing Windows path errors
-build_hrtf_matrix(r"C:\\Users\\alexa\\Downloads\\diffuse\\elev0")
+    print(f"Success! Your audio data is properly formatted and saved in {os.getcwd()}.")
+
+def write_matrix_to_file(f, matrix, target_elevs):
+    for elev_idx in range(14):
+        # Insert the elevation comment here
+        f.write(f"  // Elevation: {target_elevs[elev_idx]} degrees\n")
+        f.write("  {\n")
+        for az in range(37):
+            row_str = ", ".join(map(str, matrix[elev_idx, az]))
+            f.write(f"    {{ {row_str} }}")
+            if az < 36:
+                f.write(",")
+            f.write("\n")
+        f.write("  }")
+        if elev_idx < 13:
+            f.write(",")
+        f.write("\n")
+
+if __name__ == "__main__":
+    build_hrtf_matrices()

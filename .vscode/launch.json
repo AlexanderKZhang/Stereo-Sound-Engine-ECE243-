@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/alexa/Documents/Github/Stereo-Sound-Engine-ECE243-",
-      "program": "c:/Users/alexa/Documents/Github/Stereo-Sound-Engine-ECE243-/build/Debug/outDebug",
+      "cwd": "c:/Users/alexa/Documents/Github/Stereo-Sound-Engine-ECE243-/wav_to_C_converter",
+      "program": "c:/Users/alexa/Documents/Github/Stereo-Sound-Engine-ECE243-/wav_to_C_converter/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
