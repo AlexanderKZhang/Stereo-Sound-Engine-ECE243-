@@ -62,10 +62,10 @@ int main(void) {
       Mouse.buffer1Y = cursorY;
     }
     drawBall(backBufferAddress, cursorX, cursorY, (short)WHITE);
-    video_text(8, 8, angleStr);
-    video_text(16, 8, degree_fix_text);
-    video_text(304, 8, elevation_fix_text);
-    video_text(312, 8, elevationStr);
+    video_text(6, 8, degree_fix_text);
+    video_text(12, 8, angleStr);
+    video_text(304, 6, elevation_fix_text);
+    video_text(314, 6, elevationStr);
     waitForSync(VGABase);
     drawingBuffer1 = !drawingBuffer1;
   }

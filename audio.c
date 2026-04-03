@@ -14,15 +14,16 @@
 #define MAX_AMP 2147483647
 #endif
 
+// The true starting index for the true audio,  319802/2 = 159901 is the sample size (in short type) of the trash audio we added to the real audio to avoid sound distortion caused by the overlapping audio file and vga
+#define audio_start_index 159901
+
+int left_index_counter = audio_start_index;
+int right_index_counter = audio_start_index;
+
 // Define the actual global variables here (no 'extern')
 extern int cursorX, cursorY, angle, elevation;
 struct audio_t* const audiop = ((struct audio_t*)AUDIO_BASE);
 
-int left_index_counter = 319802/2;
-int right_index_counter = 319802/2;
-
-const short** fourty_five_deg_hrtf_left = (const short**)hrtf_left_matrix;
-const short** fourty_five_deg_hrtf_right = (const short**)hrtf_right_matrix;
 
 short zero_array[210000] = {0};
 
@@ -36,7 +37,7 @@ void audio_setup(void) {
 void handle_audio(void) {
   // THE MAGIC TRICK:
   // Cast the 8-bit byte array into a 16-bit integer array.
-  const short* audio_word_array = (const short*)Antila_Floriography;
+  const short* audio_word_array = (const short*)korg_mono_singed_sixteen_bit_PCM;
 
   unsigned int space = audiop->fifospace;
     
@@ -59,10 +60,10 @@ void handle_audio(void) {
 
     // Wrap around using the WORD count, not the BYTE size
     if (left_index_counter >= AUDIO_WORD_COUNT) {
-      left_index_counter = 319802/2;
+      left_index_counter = audio_start_index;
     }
     if (right_index_counter >= AUDIO_WORD_COUNT) {
-      right_index_counter = 319802/2;
+      right_index_counter = audio_start_index;
     }
 
     space = audiop->fifospace;

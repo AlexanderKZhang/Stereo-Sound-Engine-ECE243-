@@ -3,8 +3,8 @@
 
 #define AUDIO_BASE 0xFF203040
 #define SCALE_FACTOR 1.5
-#define AUDIO_WORD_COUNT (2171870 / 2) //Antila_Floriography
-// #define AUDIO_WORD_COUNT (94920 / 2)
+//#define AUDIO_WORD_COUNT (2171870 / 2) //Antila_Floriography
+#define AUDIO_WORD_COUNT (414722 / 2) //korg_mono_signed_sixteen_bi_PCM
 
 // Note: HRTF_LENGTH is used in convolve but wasn't defined. 
 // Make sure it is defined either here or in hrtf_matrix.h!
