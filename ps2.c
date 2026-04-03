@@ -106,7 +106,7 @@ void readPS2() {
         elevation += 10;
       }
 
-      if(leftClickData && elevation > ELEVATION_MIN){
+      if(rightClickData && elevation > ELEVATION_MIN){
         elevation -= 10;
       }
     }
