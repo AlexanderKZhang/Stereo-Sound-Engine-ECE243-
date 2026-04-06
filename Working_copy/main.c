@@ -1,15 +1,19 @@
+#include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "address_map.h"
-// #include "ps2.c"
+#include "audio.h"
+#include "greyCircle.h"
 #include "ps2.h"
-// #include "vga.c"
 #include "vga.h"
+
 
 void interruptSetup();
 void interruptHandler() __attribute__((interrupt("machine")));
+
+int cursorX, cursorY, angle;
 
 struct mouse Mouse;
 
@@ -27,19 +31,32 @@ int main(void) {
 
   bool drawingBuffer1 = true;
   while (1) {
-    int tempX = Mouse.x;
-    int tempY = Mouse.y;
+    cursorX = Mouse.x;
+    cursorY = Mouse.y;
+    // extract mouse position relative to centre of screen
+    int xFromCentre = (cursorX) - (GREYCIRCLE_WIDTH >> 1);
+    int yFromCentre = (cursorY) - (GREYCIRCLE_HEIGHT >> 1);
+    
+    // compute the angle from the centre point
+    // we want angle relative to y axis, negative angles are mapped to quadrant 2, 3, positive angles are mapped to quadrant 1, 4
+    // this is achieve by treating x as y, y as x
+    angle = calculateAngle(-yFromCentre, xFromCentre);
+    char angleStr[4];
+
+    intToStr(abs(angle), angleStr);
+  
     volatile int backBufferAddress = VGABase[1];
     if (drawingBuffer1) {
-      drawBall(backBufferAddress, Mouse.buffer2X, Mouse.buffer2Y, (short)BLACK);
-      Mouse.buffer2X = tempX;
-      Mouse.buffer2Y = tempY;
+      undrawBall(backBufferAddress, Mouse.buffer2X, Mouse.buffer2Y);
+      Mouse.buffer2X = cursorX;
+      Mouse.buffer2Y = cursorY;
     } else {
-      drawBall(backBufferAddress, Mouse.buffer1X, Mouse.buffer1Y, (short)BLACK);
-      Mouse.buffer1X = tempX;
-      Mouse.buffer1Y = tempY;
+      undrawBall(backBufferAddress, Mouse.buffer1X, Mouse.buffer1Y);
+      Mouse.buffer1X = cursorX;
+      Mouse.buffer1Y = cursorY;
     }
-    drawBall(backBufferAddress, tempX, tempY, (short)WHITE);
+    drawBall(backBufferAddress, cursorX, cursorY, (short)WHITE);
+    video_text(8, 8, angleStr);
     waitForSync(VGABase);
     drawingBuffer1 = !drawingBuffer1;
   }
@@ -53,9 +70,14 @@ void interruptSetup() {
 
   // turn on interrupts on the PS2 side
   ps2Setup();
+  audio_setup();
 
   // enable interrupts within the processor for PS2(IRQ22)
   mieValue = (0b1 << 22);
+  __asm__ volatile("csrs mie, %0" ::"r"(mieValue));
+
+  // enable interrupts for Audio port (IRQ21)
+  mieValue = (0b1 << 21);
   __asm__ volatile("csrs mie, %0" ::"r"(mieValue));
 
   // store the interruptHandler address into mtvec register
@@ -64,18 +86,27 @@ void interruptSetup() {
 
   // re-enable interrupts
   __asm__ volatile("csrs mstatus, %0" ::"r"(mstatusValue));
-
+  
   // setup done!
 }
 
 void interruptHandler() {
   // read machine interrupt pending (mip) register value to check which device
   // caused the interrupt exception
-  int mipValue;
-  __asm__ volatile("csrr %0, mip" : "=r"(mipValue));
+  int mcause_value;
+  __asm__ volatile("csrr %0, mcause" : "=r"(mcause_value));
 
-  if (mipValue & (1 << 22)) {
+  // look at the lower 31 bits (remove bit 32) and see if ISR22 causes the
+  // interrupt
+  if ((mcause_value & 0x7FFFFFFF) == (22)) {
     // PS2 interrupt
     readPS2(Mouse);
+  }
+
+  // look at the lower 31 bits (remove bit 32) and see if ISR21 causes the
+  // interrupt
+  if ((mcause_value & 0x7FFFFFFF) == (21)) {
+    // audio interrupt
+    handle_audio();
   }
 }
