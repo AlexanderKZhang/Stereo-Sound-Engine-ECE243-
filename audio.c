@@ -76,30 +76,34 @@ void handle_audio(void) {
 
 void convolve(const short* audio_word_array, int* result, int angle) {
   int elevationIdx = (elevation + 40) / 10;
+  if (elevationIdx < 0) elevationIdx = 0;
+  if (elevationIdx > 13) elevationIdx = 13;
+
   int hrtfIdx = (angle > 0) ? (angle/5) : (-angle/5);
-  if (angle > 0) {
-    if (left_index_counter < HRTF_LENGTH) {
-      for (int i = 0; i <= left_index_counter; i++) {
-        result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_left_matrix[elevationIdx][hrtfIdx][i]);
-        result[1] += (int) (audio_word_array[right_index_counter - i] * hrtf_right_matrix[elevationIdx][hrtfIdx][i]);
-      }
-    } else {
-      for (int i = 0; i <= (HRTF_LENGTH - 1); i++) {
-        result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_left_matrix[elevationIdx][hrtfIdx][i]);
-        result[1] += (int) (audio_word_array[right_index_counter - i] * hrtf_right_matrix[elevationIdx][hrtfIdx][i]);
-      }
+  if (hrtfIdx > 36) hrtfIdx = 36;
+
+  short *left_ir, *right_ir;
+
+
+  if (angle >= 0) {
+      left_ir = hrtf_left_matrix[elevationIdx][hrtfIdx];
+      right_ir = hrtf_right_matrix[elevationIdx][hrtfIdx];
+  } else {
+      // Negative angles: Swap the matrices to mirror KEMAR's right side to the left
+      left_ir = hrtf_right_matrix[elevationIdx][hrtfIdx];
+      right_ir = hrtf_left_matrix[elevationIdx][hrtfIdx];
+  }
+
+  // perform convolution
+  if (left_index_counter < HRTF_LENGTH) {
+    for (int i = 0; i <= left_index_counter; i++) {
+      result[0] += (int) (audio_word_array[left_index_counter - i] * left_ir[i]);
+      result[1] += (int) (audio_word_array[right_index_counter - i] * right_ir[i]);
     }
   } else {
-    if (left_index_counter < HRTF_LENGTH) {
-      for (int i = 0; i <= left_index_counter; i++) {
-        result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_right_matrix[elevationIdx][hrtfIdx][i]);
-        result[1] += (int) (audio_word_array[right_index_counter - i] * hrtf_left_matrix[elevationIdx][hrtfIdx][i]);
-      }
-    } else {
-      for (int i = 0; i <= (HRTF_LENGTH - 1); i++) {
-        result[0] += (int) (audio_word_array[left_index_counter - i] * hrtf_right_matrix[elevationIdx][hrtfIdx][i]);
-        result[1] += (int) (audio_word_array[right_index_counter - i] * hrtf_left_matrix[elevationIdx][hrtfIdx][i]);
-      }
+    for (int i = 0; i <= (HRTF_LENGTH - 1); i++) {
+      result[0] += (int) (audio_word_array[left_index_counter - i] * left_ir[i]);
+      result[1] += (int) (audio_word_array[right_index_counter - i] * right_ir[i]);
     }
   }
 }

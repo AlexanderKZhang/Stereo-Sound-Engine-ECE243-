@@ -1,4 +1,4 @@
-// Auto-generated 8000Hz HRTF Matrix
+// Auto-generated 8000Hz HRTF Matrix 
 #ifndef HRTF_MATRIX_H
 #define HRTF_MATRIX_H
 
