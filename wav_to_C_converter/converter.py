@@ -3,7 +3,7 @@ import re
 import numpy as np
 from scipy.io import wavfile
 
-DATASET_PATH = r"C:\\Users\\alexa\Downloads\diffuse"
+DATASET_PATH = r"C:\Users\alexa\Downloads\diffuse"
 
 def build_hrtf_matrices():
     print(f"Scanning directory: {DATASET_PATH} ...")
@@ -20,35 +20,42 @@ def build_hrtf_matrices():
                         catalog[elev] = {}
                     catalog[elev][az] = os.path.join(root, filename)
 
+    if not catalog:
+        print("Error: No valid HRTF .wav files found.")
+        return
+
     target_elevs = [-40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
-    target_azs = [i * 5 for i in range(37)] 
+    target_azs = [i * 5 for i in range(37)]  # 0 to 180 degrees ONLY
     
     left_matrix_raw = np.zeros((14, 37, 23), dtype=float)
     right_matrix_raw = np.zeros((14, 37, 23), dtype=float)
+
+    # Nearest Neighbor extraction to preserve spikes
     decimation_indices = [int(i * (44100 / 8000)) for i in range(23)]
 
     def angle_dist(x, y):
         return min(abs(x - y), 360 - abs(x - y))
 
-    print("Extracting arrays via Channel 0 Mirroring...")
+    print("Extracting TRUE STEREO arrays...")
     
     for e_idx, target_e in enumerate(target_elevs):
         if target_e not in catalog: continue
         available_azs = list(catalog[target_e].keys())
         
         for a_idx, target_a in enumerate(target_azs):
-            closest_az_left = min(available_azs, key=lambda x: angle_dist(x, target_a))
-            fs_l, data_left = wavfile.read(catalog[target_e][closest_az_left])
+            # Find the closest available azimuth (safely handles Elev 70/80 gaps)
+            closest_az = min(available_azs, key=lambda x: angle_dist(x, target_a))
+            fs, data = wavfile.read(catalog[target_e][closest_az])
             
-            target_a_right = (360 - target_a) % 360
-            closest_az_right = min(available_azs, key=lambda x: angle_dist(x, target_a_right))
-            fs_r, data_right = wavfile.read(catalog[target_e][closest_az_right])
+            frames = min(128, len(data))
             
-            frames_l = min(128, len(data_left))
-            frames_r = min(128, len(data_right))
-            
-            left_channel = data_left[:frames_l, 0] if len(data_left.shape) == 2 else data_left[:frames_l]
-            right_channel = data_right[:frames_r, 0] if len(data_right.shape) == 2 else data_right[:frames_r]
+            # TRUE STEREO EXTRACTION
+            if len(data.shape) == 2:
+                left_channel = data[:frames, 0]   # Channel 0: Left Ear
+                right_channel = data[:frames, 1]  # Channel 1: Right Ear
+            else:
+                left_channel = data[:frames]
+                right_channel = data[:frames]
             
             left_8k = left_channel[decimation_indices]
             right_8k = right_channel[decimation_indices]
@@ -56,6 +63,7 @@ def build_hrtf_matrices():
             left_matrix_raw[e_idx, a_idx] = left_8k
             right_matrix_raw[e_idx, a_idx] = right_8k
 
+    # Normalize to prevent Nios II 32-bit Integer Overflow
     global_max = max(np.max(np.abs(left_matrix_raw)), np.max(np.abs(right_matrix_raw)))
     scale_factor = 4104.0 / global_max
 
@@ -91,7 +99,7 @@ def build_hrtf_matrices():
                 f.write("\n")
             f.write("};\n\n")
             
-        # Write fast pointer lookup tables
+        # Write fast CPU lookup tables
         f.write("// Fast CPU Lookup Tables\n")
         f.write("typedef const short (*hrtf_ptr)[23];\n\n")
         
@@ -105,7 +113,7 @@ def build_hrtf_matrices():
         
         f.write("#endif // HRTF_MATRIX_8K_FIXED_H\n")
 
-    print(f"Success!")
+    print(f"Success! True Stereo 3D Matrices Built.")
 
 if __name__ == "__main__":
     build_hrtf_matrices()

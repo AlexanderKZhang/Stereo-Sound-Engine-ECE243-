@@ -100,12 +100,12 @@ void convolve(const short* audio_word_array, int* result, int tempAngle) {
 
 
   if (tempAngle >= 0) {
-      left_ir = leftMatrices[elevationIdx][hrtfIdx];
-      right_ir = rightMatrices[elevationIdx][hrtfIdx];
+      left_ir = left_matrices[elevationIdx][hrtfIdx];
+      right_ir = right_matrices[elevationIdx][hrtfIdx];
   } else {
       // Negative angles: Swap the matrices to mirror KEMAR's right side to the left
-      left_ir = rightMatrices[elevationIdx][hrtfIdx];
-      right_ir = leftMatrices[elevationIdx][hrtfIdx];
+      left_ir = right_matrices[elevationIdx][hrtfIdx];
+      right_ir = left_matrices[elevationIdx][hrtfIdx];
   }
 
   // perform convolution
