@@ -43,9 +43,15 @@ void handle_audio(void) {
     
   int wsrc = (space & 0x00FF0000) >> 16;
   int wslc = (space & 0xFF000000) >> 24;
+
+  int result[2] = {0};
+
   while ((wsrc > 0) && (wslc > 0)) {
+    // reset output sample
+    result[0] = 0;
+    result[1] = 0;
+
     // convolve
-    int result[2] = {0};
     convolve(audio_word_array, result, angle);
 
     ILD(result);
