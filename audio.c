@@ -50,10 +50,6 @@ void handle_audio(void) {
   int tempAngle;
 
   while ((wsrc > 0) && (wslc > 0)) {
-    // reset output sample
-    result[0] = 0;
-    result[1] = 0;
-
     tempAngle = angle;
 
     // convolve
@@ -90,6 +86,14 @@ void handle_audio(void) {
 
 
 void convolve(const short* audio_word_array, int* result, int tempAngle) {
+  // reset the audio sample before starting the convolution
+  result[0] = 0;
+  result[1] = 0;
+
+  if (elevation != 0) {
+    return;
+  }
+
   int elevationIdx = (elevation + 40) / 10;
   if (elevationIdx < 0) elevationIdx = 0;
   if (elevationIdx > 13) elevationIdx = 13;
