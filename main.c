@@ -14,10 +14,17 @@ void interruptSetup();
 void interruptHandler() __attribute__((interrupt("machine")));
 
 int cursorX, cursorY, angle, elevation;
+// Below two globals are used in vga display
+int current_left_sample = 0;
+int current_right_sample = 0;
 
 struct mouse Mouse;
 
 int main(void) {
+
+  volatile int* VGABase = vgaSetup((unsigned int)PIXEL_BUF_CTRL_BASE);
+  interruptSetup();
+
   /* Declare volatile pointers to I/O registers (volatile means that IO load
   and store instructions will be used to access these pointer locations,
   instead of regular memory loads and stores) */
@@ -25,9 +32,23 @@ int main(void) {
   Mouse.PS2_ptr = (int*)PS2_BASE;
   Mouse.x = Mouse.buffer1X = Mouse.buffer2X = 160;
   Mouse.y = Mouse.buffer1Y = Mouse.buffer2Y = 120;
+  
+  // Peak hold state variables
+  int left_peak = 0, right_peak = 0;             // The current master peak values
+  int left_peak_timer = 0, right_peak_timer = 0; // Timers to track how long they've been held
+  const int PEAK_HOLD_FRAMES = 30;               // Wait ~0.5 seconds (at 60fps) before dropping
+  // Track previous peak heights to undraw them in the correct buffer
+  int left_p_buffer1 = 0, left_p_buffer2 = 0;
+  int right_p_buffer1 = 0, right_p_buffer2 = 0;
 
-  volatile int* VGABase = vgaSetup((unsigned int)PIXEL_BUF_CTRL_BASE);
-  interruptSetup();
+  // Track the previous heights of the bars for both buffers
+  int left_h_buffer1 = 0, left_h_buffer2 = 0;
+  int right_h_buffer1 = 0, right_h_buffer2 = 0;
+  // Coordinates for the bottom-left corner of the volume bars
+  int leftBarX = 10, leftBarY = 200;
+  int rightBarX = 310, rightBarY = 200;
+  int maxBarHeight = 200; // Cap the bar height to 200 pixels
+
 
   //some fix text that will be drawn to the screen
   char degree_fix_text[10] = "Azimuths: ";
@@ -50,18 +71,86 @@ int main(void) {
     
     char elevationStr[4];
     intToStr(elevation, elevationStr);
-  
+    
+    // Calculate the new bar heights based on the latest audio samples
+    // NOTE: (>> 15) might need to adjust later to make the bars look right depending on how loud your convolved audio gets.
+    int current_left_h = abs(current_left_sample) >> 15; 
+    if (current_left_h > maxBarHeight) current_left_h = maxBarHeight;
+
+    int current_right_h = abs(current_right_sample) >> 15;
+    if (current_right_h > maxBarHeight) current_right_h = maxBarHeight;
+
+    // Update Left Peak
+    if (current_left_h >= left_peak) {
+      left_peak = current_left_h; // New high! Update peak.
+      left_peak_timer = 0;        // Reset the timer.
+    } else {
+      left_peak_timer++;
+      if (left_peak_timer > PEAK_HOLD_FRAMES) {
+        left_peak -= 2; // Decay speed (drops 2 pixels per frame)
+        if (left_peak < current_left_h) left_peak = current_left_h; // Don't drop below current bar
+      }
+    }
+
+    // Update Right Peak
+    if (current_right_h >= right_peak) {
+      right_peak = current_right_h;
+      right_peak_timer = 0;
+    } else {
+      right_peak_timer++;
+      if (right_peak_timer > PEAK_HOLD_FRAMES) {
+        right_peak -= 2; 
+        if (right_peak < current_right_h) right_peak = current_right_h; 
+      }
+    }
+
     volatile int backBufferAddress = VGABase[1];
+    
+    // Undraw old elements and update states
     if (drawingBuffer1) {
       undrawBall(backBufferAddress, Mouse.buffer2X, Mouse.buffer2Y);
+      undrawVolumeBar(backBufferAddress, leftBarX, leftBarY, left_h_buffer2);
+      undrawVolumeBar(backBufferAddress, rightBarX, rightBarY, right_h_buffer2);
+      
+      undrawPeakLine(backBufferAddress, leftBarX, leftBarY, left_p_buffer2);
+      undrawPeakLine(backBufferAddress, rightBarX, rightBarY, right_p_buffer2);
+      
+      // Save states for buffer 2
       Mouse.buffer2X = cursorX;
       Mouse.buffer2Y = cursorY;
+      left_h_buffer2 = current_left_h;
+      right_h_buffer2 = current_right_h;
+      left_p_buffer2 = left_peak;
+      right_p_buffer2 = right_peak;
+
     } else {
       undrawBall(backBufferAddress, Mouse.buffer1X, Mouse.buffer1Y);
+      undrawVolumeBar(backBufferAddress, leftBarX, leftBarY, left_h_buffer1);
+      undrawVolumeBar(backBufferAddress, rightBarX, rightBarY, right_h_buffer1);
+      
+      undrawPeakLine(backBufferAddress, leftBarX, leftBarY, left_p_buffer1);
+      undrawPeakLine(backBufferAddress, rightBarX, rightBarY, right_p_buffer1);
+      
+      // Save states for buffer 1
       Mouse.buffer1X = cursorX;
       Mouse.buffer1Y = cursorY;
+      left_h_buffer1 = current_left_h;
+      right_h_buffer1 = current_right_h;
+      left_p_buffer1 = left_peak;
+      right_p_buffer1 = right_peak;
     }
+    
+    // Draw the new elements
     drawBall(backBufferAddress, cursorX, cursorY, (short)WHITE);
+    
+    // Draw the main volume bars
+    drawVolumeBar(backBufferAddress, leftBarX, leftBarY, current_left_h, 0x07E0); // Green
+    drawVolumeBar(backBufferAddress, rightBarX, rightBarY, current_right_h, 0x07E0); 
+
+    // Draw the peak lines slightly above the bars (Yellow: 0xFFE0)
+    drawPeakLine(backBufferAddress, leftBarX, leftBarY, left_peak, 0xFFE0); 
+    drawPeakLine(backBufferAddress, rightBarX, rightBarY, right_peak, 0xFFE0);
+    
     video_text(4, 8, degree_fix_text);
     video_text(14, 8, angleStr);
     video_text(4, 10, elevation_fix_text);

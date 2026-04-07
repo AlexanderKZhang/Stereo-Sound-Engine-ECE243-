@@ -17,12 +17,12 @@
 // The true starting index for the true audio,  319802/2 = 159901 is the sample size (in short type) of the trash audio we added to the real audio to avoid sound distortion caused by the overlapping audio file and vga
 #define audio_start_index 159901
 
+struct audio_t* const audiop = ((struct audio_t*)AUDIO_BASE);
 int left_index_counter = audio_start_index;
 int right_index_counter = audio_start_index;
 
-// Define the actual global variables here (no 'extern')
-extern int cursorX, cursorY, angle, elevation;
-struct audio_t* const audiop = ((struct audio_t*)AUDIO_BASE);
+// Define the actual global variables that are defined in main.c so they can be used in here
+extern int cursorX, cursorY, angle, elevation, current_left_sample, current_right_sample;
 
 
 short zero_array[210000] = {0};
@@ -37,7 +37,7 @@ void audio_setup(void) {
 void handle_audio(void) {
   // THE MAGIC TRICK:
   // Cast the 8-bit byte array into a 16-bit integer array.
-  const short* audio_word_array = (const short*)korg_mono_singed_sixteen_bit_PCM;
+  const short* audio_word_array = (const short*)Antila_Floriography;
 
   unsigned int space = audiop->fifospace;
     
@@ -49,6 +49,10 @@ void handle_audio(void) {
     convolve(audio_word_array, result, angle);
 
     ILD(result);
+
+    // Update the globals for VGA display
+    current_left_sample = result[0];
+    current_right_sample = result[1];
 
     // Write to the hardware FIFOs
     audiop->left_fifo = result[0];

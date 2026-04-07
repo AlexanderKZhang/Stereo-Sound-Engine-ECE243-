@@ -93,6 +93,56 @@ void undrawBall(volatile int backBufferAddress, int x, int y) {
   }
 }
 
+// Draws a rectangle 10 pixels wide, growing UPWARDS from bottomY
+void drawVolumeBar(volatile int backBufferAddress, int startX, int bottomY, int height, short colour) {
+  for (int x = startX; x < startX + 10; x++) { // Bar is 10 pixels wide
+    for (int y = bottomY; y > bottomY - height; y--) { // Drawing upwards
+      if (x >= 0 && x < GREYCIRCLE_WIDTH && y >= 0 && y < GREYCIRCLE_HEIGHT) {
+        drawPixel(backBufferAddress, x, y, colour);
+      }
+    }
+  }
+}
+
+// Restores the background where the bar used to be
+void undrawVolumeBar(volatile int backBufferAddress, int startX, int bottomY, int height) {
+  for (int x = startX; x < startX + 10; x++) {
+    for (int y = bottomY; y > bottomY - height; y--) {
+      if (x >= 0 && x < GREYCIRCLE_WIDTH && y >= 0 && y < GREYCIRCLE_HEIGHT) {
+        drawPixel(backBufferAddress, x, y, greyCircle[GREYCIRCLE_WIDTH * y + x]);
+      }
+    }
+  }
+}
+
+// Draws a 2-pixel thick horizontal line at the peak height
+void drawPeakLine(volatile int backBufferAddress, int startX, int bottomY, int peakHeight, short colour) {
+  int y = bottomY - peakHeight;
+  
+  for (int x = startX; x < startX + 10; x++) {
+    for (int dy = 0; dy < 2; dy++) { // 2 pixels thick
+      int drawY = y - dy;
+      if (x >= 0 && x < GREYCIRCLE_WIDTH && drawY >= 0 && drawY < GREYCIRCLE_HEIGHT) {
+        drawPixel(backBufferAddress, x, drawY, colour);
+      }
+    }
+  }
+}
+
+// Restores the background where the peak line used to be
+void undrawPeakLine(volatile int backBufferAddress, int startX, int bottomY, int peakHeight) {
+  int y = bottomY - peakHeight;
+  
+  for (int x = startX; x < startX + 10; x++) {
+    for (int dy = 0; dy < 2; dy++) {
+      int drawY = y - dy;
+      if (x >= 0 && x < GREYCIRCLE_WIDTH && drawY >= 0 && drawY < GREYCIRCLE_HEIGHT) {
+        drawPixel(backBufferAddress, x, drawY, greyCircle[GREYCIRCLE_WIDTH * drawY + x]);
+      }
+    }
+  }
+}
+
 void video_text(int x, int y, char * text_ptr) {
   int offset;
   volatile char * character_buffer =
