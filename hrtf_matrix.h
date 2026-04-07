@@ -85,5 +85,21 @@ const short hrtf_right_matrix[37][23] = {
     {362, -446, 740, -97, 3627, 458, -2205, -147, -1250, -255, -756, 114, -515, -127, -358, -100, -359, 16, -190, 45, -313, 182, -225},
 };
 
+// 1. Create the 3D array structure, but point EVERY elevation to your perfectly working 2D data!
+typedef const short (*hrtf_ptr)[23];
+
+const hrtf_ptr left_matrices[14] = {
+    hrtf_left_matrix, hrtf_left_matrix, hrtf_left_matrix, hrtf_left_matrix, 
+    hrtf_left_matrix, hrtf_left_matrix, hrtf_left_matrix, hrtf_left_matrix, 
+    hrtf_left_matrix, hrtf_left_matrix, hrtf_left_matrix, hrtf_left_matrix, 
+    hrtf_left_matrix, hrtf_left_matrix
+};
+const hrtf_ptr right_matrices[14] = {
+    hrtf_right_matrix, hrtf_right_matrix, hrtf_right_matrix, hrtf_right_matrix, 
+    hrtf_right_matrix, hrtf_right_matrix, hrtf_right_matrix, hrtf_right_matrix, 
+    hrtf_right_matrix, hrtf_right_matrix, hrtf_right_matrix, hrtf_right_matrix, 
+    hrtf_right_matrix, hrtf_right_matrix
+};
+
 
 #endif
