@@ -3,7 +3,6 @@ import re
 import numpy as np
 from scipy.io import wavfile
 
-# Explicitly set the path to your MIT KEMAR dataset folder
 DATASET_PATH = r"C:\\Users\\alexa\Downloads\diffuse"
 
 def build_hrtf_matrices():
@@ -26,13 +25,15 @@ def build_hrtf_matrices():
         return
 
     target_elevs = [-40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
-    # We only need 0 to 180 degrees because the MIT KEMAR files are True Stereo
     target_azs = [i * 5 for i in range(37)] 
     
-    left_matrix = np.zeros((14, 37, 23), dtype=int)
-    right_matrix = np.zeros((14, 37, 23), dtype=int)
+    left_matrix_raw = np.zeros((14, 37, 23), dtype=float)
+    right_matrix_raw = np.zeros((14, 37, 23), dtype=float)
 
-    print("Extracting True Stereo arrays using Linear Interpolation (np.interp)...")
+    # Nearest Neighbor extraction to preserve spikes and eliminate filter delays
+    decimation_indices = [int(i * (44100 / 8000)) for i in range(23)]
+
+    print("Extracting arrays and preventing C Integer Overflow...")
     
     for e_idx, target_e in enumerate(target_elevs):
         if target_e not in catalog:
@@ -41,13 +42,11 @@ def build_hrtf_matrices():
         available_azs = list(catalog[target_e].keys())
         
         for a_idx, target_a in enumerate(target_azs):
-            # Find closest azimuth to handle missing angles at top elevations safely
             closest_az = min(available_azs, key=lambda x: abs(x - target_a))
             fs, data = wavfile.read(catalog[target_e][closest_az])
             
             frames = min(128, len(data))
             
-            # TRUE STEREO EXTRACTION: Channel 0 is Left, Channel 1 is Right
             if len(data.shape) == 2:
                 left_channel = data[:frames, 0]
                 right_channel = data[:frames, 1]
@@ -55,23 +54,28 @@ def build_hrtf_matrices():
                 left_channel = data[:frames]
                 right_channel = data[:frames]
             
-            # THE ORIGINAL MATH: np.interp (Matches your old matrix perfectly)
-            orig_t = np.linspace(0, 1, frames)
-            new_t = np.linspace(0, 1, 23)
+            left_8k = left_channel[decimation_indices]
+            right_8k = right_channel[decimation_indices]
             
-            left_8k = np.interp(new_t, orig_t, left_channel)
-            right_8k = np.interp(new_t, orig_t, right_channel)
-            
-            left_matrix[e_idx, a_idx] = np.round(left_8k).astype(int)
-            right_matrix[e_idx, a_idx] = np.round(right_8k).astype(int)
+            left_matrix_raw[e_idx, a_idx] = left_8k
+            right_matrix_raw[e_idx, a_idx] = right_8k
+
+    # =================================================================
+    # THE OVERFLOW FIX: Normalize the global maximum exactly to 4104
+    # =================================================================
+    global_max = max(np.max(np.abs(left_matrix_raw)), np.max(np.abs(right_matrix_raw)))
+    scale_factor = 4104.0 / global_max
+
+    left_matrix = np.round(left_matrix_raw * scale_factor).astype(int)
+    right_matrix = np.round(right_matrix_raw * scale_factor).astype(int)
 
     output_filename = 'hrtf_matrix_with_elev.h'
-    print(f"\nWriting flawless 3D Stereo data to {output_filename}...")
+    print(f"\nWriting Safe, Normalized 3D Stereo data to {output_filename}...")
     
     with open(output_filename, 'w') as f:
         f.write("#ifndef HRTF_MATRIX_8K_FIXED_H\n")
         f.write("#define HRTF_MATRIX_8K_FIXED_H\n\n")
-        f.write("// True Stereo, Linear Interpolated HRTF 3D Matrices (8kHz)\n")
+        f.write("// Normalized HRTF 3D Matrices (8kHz) - Scaled to prevent 32-bit Integer Overflow\n")
         f.write("// Dimensions: [14 Elevations] x [37 Azimuths] x [23 Samples]\n\n")
         
         f.write("#define NUM_ANGLES 37\n")
