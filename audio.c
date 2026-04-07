@@ -92,7 +92,7 @@ void convolve(const short* audio_word_array, int* result, int angle) {
   int hrtfIdx = (angle > 0) ? (angle/5) : (-angle/5);
   if (hrtfIdx > 36) hrtfIdx = 36;
 
-  short *left_ir, *right_ir;
+  const short *left_ir, *right_ir;
 
 
   if (angle >= 0) {
