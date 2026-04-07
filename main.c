@@ -73,10 +73,10 @@ int main(void) {
     
     // Calculate the new bar heights based on the latest audio samples
     // NOTE: (>> 15) might need to adjust later to make the bars look right depending on how loud your convolved audio gets.
-    int current_left_h = abs(current_left_sample) >> 15; 
+    int current_left_h = abs(current_left_sample) >> 17; 
     if (current_left_h > maxBarHeight) current_left_h = maxBarHeight;
 
-    int current_right_h = abs(current_right_sample) >> 15;
+    int current_right_h = abs(current_right_sample) >> 17;
     if (current_right_h > maxBarHeight) current_right_h = maxBarHeight;
 
     // Update Left Peak
@@ -143,17 +143,17 @@ int main(void) {
     drawBall(backBufferAddress, cursorX, cursorY, (short)WHITE);
     
     // Draw the main volume bars
-    drawVolumeBar(backBufferAddress, leftBarX, leftBarY, current_left_h, 0x07E0); // Green
-    drawVolumeBar(backBufferAddress, rightBarX, rightBarY, current_right_h, 0x07E0); 
+    drawVolumeBar(backBufferAddress, leftBarX, leftBarY, current_left_h, 0x7E0B); // Green
+    drawVolumeBar(backBufferAddress, rightBarX, rightBarY, current_right_h, 0x7E0B); 
 
     // Draw the peak lines slightly above the bars (Yellow: 0xFFE0)
     drawPeakLine(backBufferAddress, leftBarX, leftBarY, left_peak, 0xFFE0); 
     drawPeakLine(backBufferAddress, rightBarX, rightBarY, right_peak, 0xFFE0);
     
-    video_text(4, 8, degree_fix_text);
-    video_text(14, 8, angleStr);
-    video_text(4, 10, elevation_fix_text);
-    video_text(14, 10, elevationStr);
+    video_text(8, 8, degree_fix_text);
+    video_text(18, 8, angleStr);
+    video_text(8, 10, elevation_fix_text);
+    video_text(18, 10, elevationStr);
     waitForSync(VGABase);
     drawingBuffer1 = !drawingBuffer1;
   }
