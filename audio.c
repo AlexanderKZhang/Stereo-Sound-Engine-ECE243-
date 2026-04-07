@@ -46,13 +46,17 @@ void handle_audio(void) {
 
   int result[2] = {0};
 
+  int tempAngle;
+
   while ((wsrc > 0) && (wslc > 0)) {
     // reset output sample
     result[0] = 0;
     result[1] = 0;
 
+    tempAngle = angle;
+
     // convolve
-    convolve(audio_word_array, result, angle);
+    convolve(audio_word_array, result, tempAngle);
 
     ILD(result);
 
@@ -84,24 +88,24 @@ void handle_audio(void) {
 }
 
 
-void convolve(const short* audio_word_array, int* result, int angle) {
+void convolve(const short* audio_word_array, int* result, int tempAngle) {
   int elevationIdx = (elevation + 40) / 10;
   if (elevationIdx < 0) elevationIdx = 0;
   if (elevationIdx > 13) elevationIdx = 13;
 
-  int hrtfIdx = (angle > 0) ? (angle/5) : (-angle/5);
+  int hrtfIdx = (tempAngle > 0) ? (tempAngle/5) : (-tempAngle/5);
   if (hrtfIdx > 36) hrtfIdx = 36;
 
   const short *left_ir, *right_ir;
 
 
-  if (angle >= 0) {
-      left_ir = hrtf_left_matrix[elevationIdx][hrtfIdx];
-      right_ir = hrtf_right_matrix[elevationIdx][hrtfIdx];
+  if (tempAngle >= 0) {
+      left_ir = leftMatrices[elevationIdx][hrtfIdx];
+      right_ir = rightMatrices[elevationIdx][hrtfIdx];
   } else {
       // Negative angles: Swap the matrices to mirror KEMAR's right side to the left
-      left_ir = hrtf_right_matrix[elevationIdx][hrtfIdx];
-      right_ir = hrtf_left_matrix[elevationIdx][hrtfIdx];
+      left_ir = rightMatrices[elevationIdx][hrtfIdx];
+      right_ir = leftMatrices[elevationIdx][hrtfIdx];
   }
 
   // perform convolution
@@ -120,6 +124,11 @@ void convolve(const short* audio_word_array, int* result, int angle) {
 
 //return angle in degree, using atan2 so angle is (0, 180) from positive x axis to negative x axis in quadrant 1, 2; (0, -180) from quadrant 4 to quadrant 3
 int calculateAngle(int x, int y) {
+
+  if ((x*x + y*y) < 25) {
+    return 0;
+  }
+
   double angle = atan2((double) y, (double) x);
 
   // convert to degrees
@@ -142,18 +151,16 @@ void ILD(int result[2]) {
   int dist = (distX*distX) + (distY*distY);
   
   // scale down the avoid huge divisor to be applied to the audio (to avoid heavy computation of square-root)
-  dist = dist >> 12;
+  dist = dist >> 14;
   // to avoid zero division, choose lower bound for distance
   if (dist == 0) dist = 1;
   
   result[0] /= dist;
   result[1] /= dist;
 
-  if (result[0] > MAX_AMP) {
-    result[0] = MAX_AMP;
-  }
+  if (result[0] > MAX_AMP) result[0] = MAX_AMP;
+  if (result[1] > MAX_AMP) result[1] = MAX_AMP;
 
-  if (result[1] > MAX_AMP) {
-    result[1] = MAX_AMP;
-  }
+  if (result[0] < -MAX_AMP) result[0] = -MAX_AMP;
+  if (result[1] < -MAX_AMP) result[1] = -MAX_AMP;
 }
