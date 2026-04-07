@@ -72,7 +72,6 @@ int main(void) {
     intToStr(elevation, elevationStr);
     
     // Calculate the new bar heights based on the latest audio samples
-    // NOTE: (>> 15) might need to adjust later to make the bars look right depending on how loud your convolved audio gets.
     int current_left_h = abs(current_left_sample) >> 17; 
     if (current_left_h > maxBarHeight) current_left_h = maxBarHeight;
 
