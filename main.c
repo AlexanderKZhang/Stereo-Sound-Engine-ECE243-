@@ -21,18 +21,17 @@ int current_right_sample = 0;
 struct mouse Mouse;
 
 int main(void) {
-
-  volatile int* VGABase = vgaSetup((unsigned int)PIXEL_BUF_CTRL_BASE);
-  interruptSetup();
-
   /* Declare volatile pointers to I/O registers (volatile means that IO load
   and store instructions will be used to access these pointer locations,
   instead of regular memory loads and stores) */
-
+  
   Mouse.PS2_ptr = (int*)PS2_BASE;
   Mouse.x = Mouse.buffer1X = Mouse.buffer2X = 160;
   Mouse.y = Mouse.buffer1Y = Mouse.buffer2Y = 120;
   
+  volatile int* VGABase = vgaSetup((unsigned int)PIXEL_BUF_CTRL_BASE);
+  interruptSetup();
+
   // Peak hold state variables
   int left_peak = 0, right_peak = 0;             // The current master peak values
   int left_peak_timer = 0, right_peak_timer = 0; // Timers to track how long they've been held
