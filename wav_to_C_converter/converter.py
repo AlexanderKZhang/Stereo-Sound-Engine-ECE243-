@@ -26,16 +26,13 @@ def build_hrtf_matrices():
         return
 
     target_elevs = [-40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
-    # We only need 0 to 180 degrees because the files are True Stereo
+    # We only need 0 to 180 degrees because the MIT KEMAR files are True Stereo
     target_azs = [i * 5 for i in range(37)] 
     
     left_matrix = np.zeros((14, 37, 23), dtype=int)
     right_matrix = np.zeros((14, 37, 23), dtype=int)
 
-    # Nearest Neighbor: 44100 / 8000 = 5.5125
-    decimation_indices = [int(i * (44100 / 8000)) for i in range(23)]
-
-    print("Extracting True Stereo arrays (Preserving raw amplitude peaks)...")
+    print("Extracting True Stereo arrays using Linear Interpolation (np.interp)...")
     
     for e_idx, target_e in enumerate(target_elevs):
         if target_e not in catalog:
@@ -44,7 +41,7 @@ def build_hrtf_matrices():
         available_azs = list(catalog[target_e].keys())
         
         for a_idx, target_a in enumerate(target_azs):
-            # Find the closest azimuth (fills in the gaps at Elev 70/80 safely)
+            # Find closest azimuth to handle missing angles at top elevations safely
             closest_az = min(available_azs, key=lambda x: abs(x - target_a))
             fs, data = wavfile.read(catalog[target_e][closest_az])
             
@@ -56,14 +53,17 @@ def build_hrtf_matrices():
                 right_channel = data[:frames, 1]
             else:
                 left_channel = data[:frames]
-                right_channel = data[:frames] # Fallback if file is mono
+                right_channel = data[:frames]
             
-            # Extract exactly the 23 raw spikes to avoid np.interp dead zones
-            left_8k = left_channel[decimation_indices]
-            right_8k = right_channel[decimation_indices]
+            # THE ORIGINAL MATH: np.interp (Matches your old matrix perfectly)
+            orig_t = np.linspace(0, 1, frames)
+            new_t = np.linspace(0, 1, 23)
             
-            left_matrix[e_idx, a_idx] = left_8k
-            right_matrix[e_idx, a_idx] = right_8k
+            left_8k = np.interp(new_t, orig_t, left_channel)
+            right_8k = np.interp(new_t, orig_t, right_channel)
+            
+            left_matrix[e_idx, a_idx] = np.round(left_8k).astype(int)
+            right_matrix[e_idx, a_idx] = np.round(right_8k).astype(int)
 
     output_filename = 'hrtf_matrix_with_elev.h'
     print(f"\nWriting flawless 3D Stereo data to {output_filename}...")
@@ -71,7 +71,7 @@ def build_hrtf_matrices():
     with open(output_filename, 'w') as f:
         f.write("#ifndef HRTF_MATRIX_8K_FIXED_H\n")
         f.write("#define HRTF_MATRIX_8K_FIXED_H\n\n")
-        f.write("// True Stereo, Nearest-Neighbor HRTF 3D Matrices (8kHz)\n")
+        f.write("// True Stereo, Linear Interpolated HRTF 3D Matrices (8kHz)\n")
         f.write("// Dimensions: [14 Elevations] x [37 Azimuths] x [23 Samples]\n\n")
         
         f.write("#define NUM_ANGLES 37\n")
