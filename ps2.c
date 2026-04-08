@@ -76,16 +76,18 @@ void readPS2() {
     bytes[2] = newData;
     byteCounter++;
 
+    // if 3 bytes have been read, then proceed
     if (byteCounter >= 3) {
       byteCounter = 0;
-      HEX_PS2(bytes[0], bytes[1], bytes[2]);
+      HEX_PS2(bytes[0], bytes[1], bytes[2]); // display the bytes in the 
 
       // decipher the PS2 data bytes
-      int xData = (bytes[0] & (1 << 4)) ? (0xFFFFFF00 | bytes[1]) : bytes[1];
+      int xData = (bytes[0] & (1 << 4)) ? (0xFFFFFF00 | bytes[1]) : bytes[1]; // sign extension to find how many pixels to move the cursor
       int yData = (bytes[0] & (1 << 5)) ? (0xFFFFFF00 | bytes[2]) : bytes[2];
       int leftClickData = (bytes[0] & (1));
       int rightClickData = (bytes[0] & (1 << 1));
 
+      // update cursor position (x,y) based on mouse reading
       if (xData) {
         Mouse.x += xData;
         if (Mouse.x < 0)
@@ -102,6 +104,7 @@ void readPS2() {
           Mouse.y = 239;
       }
 
+      // update the elevation when Left or Right mouse button clicked
       if(leftClickData && elevation < ELEVATION_MAX){
         elevation += 10;
       }

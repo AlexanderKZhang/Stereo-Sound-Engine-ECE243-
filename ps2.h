@@ -1,6 +1,7 @@
 #ifndef PS2_H
 #define PS2_H
 
+// mouse struct to store mouse relevant data
 struct mouse {
   volatile int* PS2_ptr;
   int x, buffer1X, buffer2X;

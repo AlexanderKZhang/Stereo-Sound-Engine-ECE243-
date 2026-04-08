@@ -44,11 +44,12 @@ void waitForSync(volatile int* VGABase) {
 // draws a specific colour into a pixel in the back buffer at the specified x
 // and y coordinates provided
 void drawPixel(volatile int backBufferAddress, int x, int y, short colour) {
+  // y byte coordinates stored starting from 10, x coordinates byte stored starting from bit 1
   volatile short* pixelAddress = (volatile short*)(backBufferAddress + (y << 10) + (x << 1));
   *(pixelAddress) = colour;
 }
 
-// clear the back buffer by drawing black into each pixel
+// draws the grey circle background into the back buffer
 void clearScreen(volatile int backBufferAddress) {
   for (int x = 0; x < GREYCIRCLE_WIDTH; x++) {
     for (int y = 0; y < GREYCIRCLE_HEIGHT; y++) {
@@ -57,6 +58,7 @@ void clearScreen(volatile int backBufferAddress) {
   }
 }
 
+// draws a ball of radius 2 at at the specified x,y coordinate
 void drawBall(volatile int backBufferAddress, int x, int y, short colour) {
   for (int i = x - 2; i < x + 3; i++) {
     if (i == x - 2 || i == x + 2) {
@@ -75,6 +77,7 @@ void drawBall(volatile int backBufferAddress, int x, int y, short colour) {
   }
 }
 
+// undraws the ball by drawing the background over the specified x,y coordinates
 void undrawBall(volatile int backBufferAddress, int x, int y) {
   for (int i = x - 2; i < x + 3; i++) {
     if (i == x - 2 || i == x + 2) {
@@ -143,6 +146,7 @@ void undrawPeakLine(volatile int backBufferAddress, int startX, int bottomY, int
   }
 }
 
+// provided function that writes the character displayed in the character buffer
 void video_text(int x, int y, char * text_ptr) {
   int offset;
   volatile char * character_buffer =

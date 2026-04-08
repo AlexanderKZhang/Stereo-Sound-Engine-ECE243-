@@ -149,11 +149,15 @@ int main(void) {
     drawPeakLine(backBufferAddress, leftBarX, leftBarY, left_peak, 0xFFE0); 
     drawPeakLine(backBufferAddress, rightBarX, rightBarY, right_peak, 0xFFE0);
     
+    // finally write all the debug text over the screen after all the visuals have been drawn
     video_text(8, 8, degree_fix_text);
     video_text(18, 8, angleStr);
     video_text(8, 10, elevation_fix_text);
     video_text(18, 10, elevationStr);
     waitForSync(VGABase);
+
+    // flip the bit that determines which buffer is being drawn to in memory so we know
+    // which previous coordinate to draw the cursor
     drawingBuffer1 = !drawingBuffer1;
   }
 }
